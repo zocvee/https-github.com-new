@@ -9,7 +9,6 @@
 // （Node 端包），会被打包进客户端而构建失败。
 // ============================================================================
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 interface McpServerConfig {
   command: string;
