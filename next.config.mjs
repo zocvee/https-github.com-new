@@ -1,113 +1,74 @@
-import webpack from "webpack";
+// ============================================================================
+// MCP 空实现（静态导出兼容版）
+// 静态导出模式（output: "export"）不支持 Next.js Server Actions
+// ============================================================================
 
-const mode = process.env.BUILD_MODE ?? "standalone";
-console.log("[Next] build mode", mode);
+interface McpServerConfig {
+  command: string;
+  args: string[];
+  env?: Record<string, string>;
+  status?: "active" | "paused" | "error";
+}
 
-const disableChunk = !!process.env.DISABLE_CHUNK || mode === "export";
-console.log("[Next] build with chunk: ", !disableChunk);
+interface McpConfigData {
+  mcpServers: Record<string, McpServerConfig>;
+}
 
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ["@svgr/webpack"],
-    });
+const EMPTY_CONFIG: McpConfigData = { mcpServers: {} };
 
-    if (disableChunk) {
-      config.plugins.push(
-        new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
-      );
-    }
+export async function getClientsStatus(): Promise<
+  Record<string, { status: string; errorMsg: string | null }>
+> {
+  return {};
+}
 
-    config.resolve.fallback = {
-      child_process: false,
-      bufferutil: false,
-      "utf-8-validate": false,
-    };
+export async function getClientTools(_clientId: string) {
+  return null;
+}
 
-    return config;
-  },
-  output: mode,
-  images: {
-    unoptimized: mode === "export",
-  },
-  experimental: {
-    forceSwcTransforms: true,
-  },
-};
+export async function getAvailableClientsCount() {
+  return 0;
+}
 
-const CorsHeaders = [
-  { key: "Access-Control-Allow-Credentials", value: "true" },
-  { key: "Access-Control-Allow-Origin", value: "*" },
-  {
-    key: "Access-Control-Allow-Methods",
-    value: "*",
-  },
-  {
-    key: "Access-Control-Allow-Headers",
-    value: "*",
-  },
-  {
-    key: "Access-Control-Max-Age",
-    value: "86400",
-  },
-];
+export async function getAllTools() {
+  return [];
+}
 
-if (mode !== "export") {
-  nextConfig.headers = async () => {
-    return [
-      {
-        source: "/api/:path*",
-        headers: CorsHeaders,
-      },
-    ];
-  };
+export async function initializeMcpSystem() {
+  return EMPTY_CONFIG;
+}
 
-  nextConfig.rewrites = async () => {
-    const ret = [
-      // adjust for previous version directly using "/api/proxy/" as proxy base route
-      // {
-      //   source: "/api/proxy/v1/:path*",
-      //   destination: "https://api.openai.com/v1/:path*",
-      // },
-      {
-        // https://{resource_name}.openai.azure.com/openai/deployments/{deploy_name}/chat/completions
-        source:
-          "/api/proxy/azure/:resource_name/deployments/:deploy_name/:path*",
-        destination:
-          "https://:resource_name.openai.azure.com/openai/deployments/:deploy_name/:path*",
-      },
-      {
-        source: "/api/proxy/google/:path*",
-        destination: "https://generativelanguage.googleapis.com/:path*",
-      },
-      {
-        source: "/api/proxy/openai/:path*",
-        destination: "https://api.openai.com/:path*",
-      },
-      {
-        source: "/api/proxy/anthropic/:path*",
-        destination: "https://api.anthropic.com/:path*",
-      },
-      {
-        source: "/google-fonts/:path*",
-        destination: "https://fonts.googleapis.com/:path*",
-      },
-      {
-        source: "/sharegpt",
-        destination: "https://sharegpt.com/api/conversations",
-      },
-      {
-        source: "/api/proxy/alibaba/:path*",
-        destination: "https://dashscope.aliyuncs.com/api/:path*",
-      },
-    ];
-
-    return {
-      beforeFiles: ret,
-    };
+export async function addMcpServer(
+  clientId: string,
+  config: McpServerConfig,
+): Promise<McpConfigData> {
+  return {
+    mcpServers: { ...EMPTY_CONFIG.mcpServers, [clientId]: config },
   };
 }
 
-export default nextConfig;
+export async function pauseMcpServer(_clientId: string) {
+  return EMPTY_CONFIG;
+}
+
+export async function resumeMcpServer(_clientId: string): Promise<void> {}
+
+export async function removeMcpServer(_clientId: string) {
+  return EMPTY_CONFIG;
+}
+
+export async function restartAllClients() {
+  return EMPTY_CONFIG;
+}
+
+export async function executeMcpAction(_clientId: string, _request: unknown) {
+  return { status: "disabled" };
+}
+
+export async function getMcpConfigFromFile() {
+  return EMPTY_CONFIG;
+}
+
+export function isMcpEnabled(): boolean {
+  return false;
+}
