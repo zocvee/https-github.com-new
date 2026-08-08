@@ -583,6 +583,7 @@ function SyncItems() {
 export function Settings() {
   const navigate = useNavigate();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [sharePassword, setSharePassword] = useState("");
   const config = useAppConfig();
   const updateConfig = config.update;
 
@@ -1824,6 +1825,64 @@ export function Settings() {
                 </>
               )}
           </>
+
+          <ListItem
+            title="分享配置"
+            subTitle="生成一个链接，在其他设备打开可自动填入 API Key"
+            vertical={true}
+          >
+            <PasswordInput
+              style={{ marginTop: 10, marginBottom: 10 }}
+              value={sharePassword}
+              type="text"
+              placeholder="设置使用密码（可选，换设备使用时需输入）"
+              onChange={(e) => setSharePassword(e.currentTarget.value)}
+            />
+            <IconButton
+              text="复制分享链接"
+              onClick={() => {
+                const config = {
+                  p: accessStore.provider,
+                  openaiApiKey: accessStore.openaiApiKey,
+                  openaiUrl: accessStore.openaiUrl,
+                  azureApiKey: accessStore.azureApiKey,
+                  azureUrl: accessStore.azureUrl,
+                  azureApiVersion: accessStore.azureApiVersion,
+                  googleApiKey: accessStore.googleApiKey,
+                  googleUrl: accessStore.googleUrl,
+                  anthropicApiKey: accessStore.anthropicApiKey,
+                  anthropicUrl: accessStore.anthropicUrl,
+                  anthropicApiVersion: accessStore.anthropicApiVersion,
+                  baiduApiKey: accessStore.baiduApiKey,
+                  baiduSecretKey: accessStore.baiduSecretKey,
+                  baiduUrl: accessStore.baiduUrl,
+                  bytedanceApiKey: accessStore.bytedanceApiKey,
+                  bytedanceUrl: accessStore.bytedanceUrl,
+                  alibabaApiKey: accessStore.alibabaApiKey,
+                  alibabaUrl: accessStore.alibabaUrl,
+                  deepseekApiKey: accessStore.deepseekApiKey,
+                  deepseekUrl: accessStore.deepseekUrl,
+                  tencentSecretId: accessStore.tencentSecretId,
+                  tencentSecretKey: accessStore.tencentSecretKey,
+                  moonshotApiKey: accessStore.moonshotApiKey,
+                  iflytekApiKey: accessStore.iflytekApiKey,
+                  iflytekApiSecret: accessStore.iflytekApiSecret,
+                  xaiApiKey: accessStore.xaiApiKey,
+                  chatglmApiKey: accessStore.chatglmApiKey,
+                  siliconflowApiKey: accessStore.siliconflowApiKey,
+                  stabilityApiKey: accessStore.stabilityApiKey,
+                  customModels: config.customModels,
+                  accessCode: accessStore.accessCode,
+                  useCustomConfig: true,
+                  sharePw: sharePassword || "",
+                };
+                const encoded = btoa(encodeURIComponent(JSON.stringify(config)));
+                const url = `${location.origin}/#share=${encoded}`;
+                copyToClipboard(url);
+                showToast("分享链接已复制！" + (sharePassword ? "使用时需要输入密码" : "在其他设备打开即可自动配置"));
+              }}
+            />
+          </ListItem>
 
           {!shouldHideBalanceQuery && !clientConfig?.isApp ? (
             <ListItem
