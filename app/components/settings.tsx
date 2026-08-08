@@ -1778,34 +1778,33 @@ export function Settings() {
           {saasStartComponent}
           {accessCodeComponent}
 
-          {!accessStore.hideUserApiKey && (
-            <>
-              {useCustomConfigComponent}
+          <>
+            {useCustomConfigComponent}
 
-              {accessStore.useCustomConfig && (
-                <>
-                  <ListItem
-                    title={Locale.Settings.Access.Provider.Title}
-                    subTitle={Locale.Settings.Access.Provider.SubTitle}
+            {accessStore.useCustomConfig && (
+              <>
+                <ListItem
+                  title={Locale.Settings.Access.Provider.Title}
+                  subTitle={Locale.Settings.Access.Provider.SubTitle}
+                >
+                  <Select
+                    aria-label={Locale.Settings.Access.Provider.Title}
+                    value={accessStore.provider}
+                    onChange={(e) => {
+                      accessStore.update(
+                        (access) =>
+                          (access.provider = e.target
+                            .value as ServiceProvider),
+                      );
+                    }}
                   >
-                    <Select
-                      aria-label={Locale.Settings.Access.Provider.Title}
-                      value={accessStore.provider}
-                      onChange={(e) => {
-                        accessStore.update(
-                          (access) =>
-                            (access.provider = e.target
-                              .value as ServiceProvider),
-                        );
-                      }}
-                    >
-                      {Object.entries(ServiceProvider).map(([k, v]) => (
-                        <option value={v} key={k}>
-                          {k}
-                        </option>
-                      ))}
-                    </Select>
-                  </ListItem>
+                    {Object.entries(ServiceProvider).map(([k, v]) => (
+                      <option value={v} key={k}>
+                        {k}
+                      </option>
+                    ))}
+                  </Select>
+                </ListItem>
 
                   {openAIConfigComponent}
                   {azureConfigComponent}
@@ -1824,8 +1823,7 @@ export function Settings() {
                   {siliconflowConfigComponent}
                 </>
               )}
-            </>
-          )}
+          </>
 
           {!shouldHideBalanceQuery && !clientConfig?.isApp ? (
             <ListItem
