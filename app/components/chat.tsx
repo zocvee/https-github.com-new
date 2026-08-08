@@ -502,10 +502,12 @@ export function ChatActions(props: {
   const accessStore = useAccessStore();
   const models = useMemo(() => {
     const availableProviders = accessStore.availableProviders || {};
+    const hasAnyProviderAvailable = Object.values(availableProviders).some(v => v);
     const isProviderAvailable = (providerName?: string) => {
       if (!providerName) return true;
+      // 服务端检测到管理员配置了 API Key
       if (availableProviders[providerName]) return true;
-      // 用户自己输入了对应服务商的 API Key
+      // 用户自己在设置页输入了 API Key
       switch (providerName) {
         case "OpenAI": return !!accessStore.openaiApiKey;
         case "Azure": return !!accessStore.azureApiKey;
@@ -522,7 +524,7 @@ export function ChatActions(props: {
         case "ChatGLM": return !!accessStore.chatglmApiKey;
         case "SiliconFlow": return !!accessStore.siliconflowApiKey;
         case "Stability": return !!accessStore.stabilityApiKey;
-        default: return false;
+        default: return !hasAnyProviderAvailable;
       }
     };
     const filteredModels = allModels
@@ -1030,6 +1032,15 @@ function _Chat() {
   const [attachImages, setAttachImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
+  // 使用密码验证（持久化，输入一次后长期有效，直到密码被更换）
+  const sharePwRef = useRef(localStorage.getItem("share_pw") || "");
+  const [needPassword, setNeedPassword] = useState(!!sharePwRef.current && localStorage.getItem("share_verified") !== sharePwRef.current);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const pendingSubmitRef = useRef<(() => void) | null>(null);
+  const [canSend, setCanSend] = useState(!sharePwRef.current || localStorage.getItem("share_verified") === sharePwRef.current);
+
   // prompt hints
   const promptStore = usePromptStore();
   const [promptHints, setPromptHints] = useState<RenderPrompt[]>([]);
@@ -1105,6 +1116,25 @@ function _Chat() {
       setUserInput("");
       setPromptHints([]);
       matchCommand.invoke();
+      return;
+    }
+    // 如果设置了使用密码且未验证，弹出密码框
+    if (needPassword && !canSend) {
+      pendingSubmitRef.current = () => {
+        setIsLoading(true);
+        chatStore
+          .onUserInput(userInput, attachImages)
+          .then(() => setIsLoading(false));
+        setAttachImages([]);
+        chatStore.setLastInput(userInput);
+        setUserInput("");
+        setPromptHints([]);
+        if (!isMobileScreen) inputRef.current?.focus();
+        setAutoScroll(true);
+      };
+      setPasswordInput("");
+      setPasswordError("");
+      setShowPasswordModal(true);
       return;
     }
     setIsLoading(true);
@@ -1484,6 +1514,59 @@ function _Chat() {
       }
     },
   });
+
+  // 自动加载分享链接中的配置
+  useEffect(() => {
+    const hash = window.location.hash;
+    const match = hash.match(/^#share=(.+)/);
+    if (!match) return;
+    try {
+      const decoded = decodeURIComponent(atob(match[1]));
+      const sharedConfig = JSON.parse(decoded);
+      if (sharedConfig.useCustomConfig) {
+        accessStore.update((access) => {
+          if (sharedConfig.p) access.provider = sharedConfig.p;
+          if (sharedConfig.openaiApiKey) access.openaiApiKey = sharedConfig.openaiApiKey;
+          if (sharedConfig.openaiUrl) access.openaiUrl = sharedConfig.openaiUrl;
+          if (sharedConfig.azureApiKey) access.azureApiKey = sharedConfig.azureApiKey;
+          if (sharedConfig.azureUrl) access.azureUrl = sharedConfig.azureUrl;
+          if (sharedConfig.azureApiVersion) access.azureApiVersion = sharedConfig.azureApiVersion;
+          if (sharedConfig.googleApiKey) access.googleApiKey = sharedConfig.googleApiKey;
+          if (sharedConfig.anthropicApiKey) access.anthropicApiKey = sharedConfig.anthropicApiKey;
+          if (sharedConfig.baiduApiKey) access.baiduApiKey = sharedConfig.baiduApiKey;
+          if (sharedConfig.baiduSecretKey) access.baiduSecretKey = sharedConfig.baiduSecretKey;
+          if (sharedConfig.alibabaApiKey) access.alibabaApiKey = sharedConfig.alibabaApiKey;
+          if (sharedConfig.deepseekApiKey) access.deepseekApiKey = sharedConfig.deepseekApiKey;
+          if (sharedConfig.deepseekUrl) access.deepseekUrl = sharedConfig.deepseekUrl;
+          if (sharedConfig.bytedanceApiKey) access.bytedanceApiKey = sharedConfig.bytedanceApiKey;
+          if (sharedConfig.moonshotApiKey) access.moonshotApiKey = sharedConfig.moonshotApiKey;
+          if (sharedConfig.iflytekApiKey) access.iflytekApiKey = sharedConfig.iflytekApiKey;
+          if (sharedConfig.iflytekApiSecret) access.iflytekApiSecret = sharedConfig.iflytekApiSecret;
+          if (sharedConfig.xaiApiKey) access.xaiApiKey = sharedConfig.xaiApiKey;
+          if (sharedConfig.chatglmApiKey) access.chatglmApiKey = sharedConfig.chatglmApiKey;
+          if (sharedConfig.siliconflowApiKey) access.siliconflowApiKey = sharedConfig.siliconflowApiKey;
+          if (sharedConfig.stabilityApiKey) access.stabilityApiKey = sharedConfig.stabilityApiKey;
+          if (sharedConfig.accessCode) access.accessCode = sharedConfig.accessCode;
+          access.useCustomConfig = true;
+        });
+        if (sharedConfig.customModels) {
+          config.update((cfg) => (cfg.customModels = sharedConfig.customModels));
+        }
+        // 保存使用密码到本地存储（持久化）
+        if (sharedConfig.sharePw) {
+          localStorage.setItem("share_pw", sharedConfig.sharePw);
+          sharePwRef.current = sharedConfig.sharePw;
+          setNeedPassword(true);
+          setCanSend(false);
+        }
+        showToast("已从分享链接加载配置");
+        // 清除 URL 中的分享参数，避免刷新时重复加载
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    } catch (e) {
+      console.error("[Share] failed to load shared config", e);
+    }
+  }, []);
 
   // edit / insert message modal
   const [isEditingMessage, setIsEditingMessage] = useState(false);
@@ -2155,6 +2238,86 @@ function _Chat() {
 
       {showShortcutKeyModal && (
         <ShortcutKeyModal onClose={() => setShowShortcutKeyModal(false)} />
+      )}
+
+      {showPasswordModal && (
+        <div className="modal-mask">
+          <Modal
+            title="输入使用密码"
+            onClose={() => setShowPasswordModal(false)}
+            actions={[
+              <IconButton
+                key="cancel"
+                text="取消"
+                icon={<CloseIcon />}
+                onClick={() => setShowPasswordModal(false)}
+              />,
+              <IconButton
+                key="confirm"
+                type="primary"
+                text="确认"
+                icon={<ConfirmIcon />}
+                onClick={() => {
+                  if (passwordInput === sharePwRef.current) {
+                    localStorage.setItem("share_verified", sharePwRef.current);
+                    setCanSend(true);
+                    setNeedPassword(false);
+                    setShowPasswordModal(false);
+                    if (pendingSubmitRef.current) {
+                      pendingSubmitRef.current();
+                      pendingSubmitRef.current = null;
+                    }
+                  } else {
+                    setPasswordError("密码错误，请重试");
+                  }
+                }}
+              />,
+            ]}
+          >
+            <div style={{ padding: "10px 0", textAlign: "center" }}>
+              <div style={{ marginBottom: 10, color: "#888" }}>
+                此设备需要输入使用密码才能发送消息
+              </div>
+              <input
+                type="password"
+                value={passwordInput}
+                placeholder="请输入使用密码"
+                autoFocus
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  fontSize: 16,
+                  borderRadius: 8,
+                  border: "1px solid #ccc",
+                  outline: "none",
+                }}
+                onInput={(e) => {
+                  setPasswordInput(e.currentTarget.value);
+                  setPasswordError("");
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    if (passwordInput === sharePwRef.current) {
+                      localStorage.setItem("share_verified", sharePwRef.current);
+                      setCanSend(true);
+                      setNeedPassword(false);
+                      setShowPasswordModal(false);
+                      if (pendingSubmitRef.current) {
+                        pendingSubmitRef.current();
+                        pendingSubmitRef.current = null;
+                      }
+                    } else {
+                      setPasswordError("密码错误，请重试");
+                    }
+                  }
+                }}
+              />
+              {passwordError && (
+                <div style={{ color: "red", marginTop: 8 }}>{passwordError}</div>
+              )}
+            </div>
+          </Modal>
+        </div>
       )}
     </>
   );
