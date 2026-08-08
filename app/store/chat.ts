@@ -59,6 +59,9 @@ export type ChatMessage = RequestMessage & {
   tools?: ChatMessageTool[];
   audio_url?: string;
   isMcpResponse?: boolean;
+  thinkingContent?: string;
+  thinkingDuration?: number;
+  thinkingStartTime?: number;
 };
 
 export function createMessage(override: Partial<ChatMessage>): ChatMessage {
@@ -444,10 +447,15 @@ export const useChatStore = createPersistStore(
         api.llm.chat({
           messages: sendMessages,
           config: { ...modelConfig, stream: true },
-          onUpdate(message) {
+          onUpdate(message, fetchText, thinkingInfo) {
             botMessage.streaming = true;
             if (message) {
               botMessage.content = message;
+            }
+            if (thinkingInfo) {
+              botMessage.thinkingContent = thinkingInfo.thinkingContent;
+              botMessage.thinkingStartTime = thinkingInfo.thinkingStartTime || botMessage.thinkingStartTime;
+              botMessage.thinkingDuration = thinkingInfo.thinkingDuration;
             }
             get().updateTargetSession(session, (session) => {
               session.messages = session.messages.concat();
