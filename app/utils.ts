@@ -259,10 +259,31 @@ export function getMessageTextContentWithoutThinking(message: RequestMessage) {
     }
   }
 
-  // Filter out thinking lines (starting with "> ")
+  // Strip leading blockquote lines (thinking content) from the content
+  // Thinking content is at the beginning of the message, separated by \n\n from response
+  const lines = content.split("\n");
+  let startIndex = 0;
+  let foundBlockquoteEnd = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith("> ") || line.startsWith(">")) {
+      startIndex = i + 1;
+    } else if (line.trim() === "" && startIndex > 0) {
+      // Skip blank lines after blockquotes
+      startIndex = i + 1;
+    } else if (startIndex > 0 && line.trim() !== "") {
+      // Found non-blockquote, non-blank content after thinking block
+      foundBlockquoteEnd = true;
+      break;
+    }
+  }
+  if (foundBlockquoteEnd) {
+    return lines.slice(startIndex).join("\n").trim();
+  }
+  // Fallback: use the old filter approach if no clear blockquote section found
   return content
     .split("\n")
-    .filter((line) => !line.startsWith("> ") && line.trim() !== "")
+    .filter((line) => !line.startsWith("> ") && !line.startsWith(">"))
     .join("\n")
     .trim();
 }
