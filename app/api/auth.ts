@@ -46,12 +46,7 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
     };
   }
 
-  if (serverConfig.hideUserApiKey && !!apiKey) {
-    return {
-      error: true,
-      msg: "you are not allowed to access with your own api key",
-    };
-  }
+  // 始终允许用户使用自己的 API Key，不再拦截
 
   // if user does not provide an api key, inject system api key
   if (!apiKey) {
