@@ -141,6 +141,7 @@ const DEFAULT_ACCESS_STATE = {
   customModels: "",
   defaultModel: "",
   visionModels: "",
+  availableProviders: {} as Record<string,boolean>,
 
   // tts config
   edgeTTSVoiceName: "zh-CN-YunxiNeural",
