@@ -502,12 +502,12 @@ export function ChatActions(props: {
   const accessStore = useAccessStore();
   const models = useMemo(() => {
     const availableProviders = accessStore.availableProviders || {};
-    const hasAnyProviderAvailable = Object.values(availableProviders).some(v => v);
     const isProviderAvailable = (providerName?: string) => {
       if (!providerName) return true;
       // 服务端检测到管理员配置了 API Key
       if (availableProviders[providerName]) return true;
       // 用户自己在设置页输入了 API Key
+      // 注：仅显示已配置 API Key 的提供商，隐藏其余全部模型
       switch (providerName) {
         case "OpenAI": return !!accessStore.openaiApiKey;
         case "Azure": return !!accessStore.azureApiKey;
@@ -524,7 +524,7 @@ export function ChatActions(props: {
         case "ChatGLM": return !!accessStore.chatglmApiKey;
         case "SiliconFlow": return !!accessStore.siliconflowApiKey;
         case "Stability": return !!accessStore.stabilityApiKey;
-        default: return !hasAnyProviderAvailable;
+        default: return false;
       }
     };
     const filteredModels = allModels
