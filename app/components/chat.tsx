@@ -2322,7 +2322,6 @@ function _Chat() {
     </>
   );
 }
-
 export function Chat() {
   const chatStore = useChatStore();
   const session = chatStore.currentSession();
