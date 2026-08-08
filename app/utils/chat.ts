@@ -418,7 +418,10 @@ export function streamWithThink(
   let responseRes: Response;
   let isInThinkingMode = false;
   let lastIsThinking = false;
-  let lastIsThinkingTagged = false; //between <think> and </think> tags
+  let lastIsThinkingTagged = false; //between  thinking and  response tags
+  let thinkingText = "";
+  let thinkingStartTime = 0;
+  let thinkingEndTime = 0;
 
   // animate response to make it looks smooth
   function animateResponseText() {
@@ -436,7 +439,16 @@ export function streamWithThink(
       const fetchText = remainText.slice(0, fetchCount);
       responseText += fetchText;
       remainText = remainText.slice(fetchCount);
-      options.onUpdate?.(responseText, fetchText);
+      const thinkingInfo = thinkingText
+        ? {
+            thinkingContent: thinkingText,
+            thinkingDuration: thinkingEndTime
+              ? thinkingEndTime - thinkingStartTime
+              : Date.now() - thinkingStartTime,
+            thinkingFinished: !!thinkingEndTime,
+          }
+        : null;
+      options.onUpdate?.(responseText, fetchText, thinkingInfo);
     }
 
     requestAnimationFrame(animateResponseText);
@@ -624,10 +636,14 @@ export function streamWithThink(
             if (!isInThinkingMode || isThinkingChanged) {
               // If this is a new thinking block or mode changed, add prefix
               isInThinkingMode = true;
+              if (thinkingStartTime === 0) {
+                thinkingStartTime = Date.now();
+              }
               if (remainText.length > 0) {
                 remainText += "\n";
               }
               remainText += "> " + chunk.content;
+              thinkingText += chunk.content;
             } else {
               // Handle newlines in thinking content
               if (chunk.content.includes("\n\n")) {
@@ -636,12 +652,16 @@ export function streamWithThink(
               } else {
                 remainText += chunk.content;
               }
+              thinkingText += chunk.content;
             }
           } else {
             // If in normal mode
             if (isInThinkingMode || isThinkingChanged) {
               // If switching from thinking mode to normal mode
               isInThinkingMode = false;
+              if (thinkingEndTime === 0) {
+                thinkingEndTime = Date.now();
+              }
               remainText += "\n\n" + chunk.content;
             } else {
               remainText += chunk.content;
