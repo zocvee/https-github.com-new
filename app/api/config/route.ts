@@ -15,6 +15,24 @@ const DANGER_CONFIG = {
   customModels: serverConfig.customModels,
   defaultModel: serverConfig.defaultModel,
   visionModels: serverConfig.visionModels,
+  // 管理员配置了哪些 AI 服务商的 API Key
+  availableProviders: {
+    OpenAI: !!serverConfig.apiKey,
+    Azure: serverConfig.isAzure,
+    Google: serverConfig.isGoogle,
+    Anthropic: serverConfig.isAnthropic,
+    Baidu: serverConfig.isBaidu,
+    ByteDance: serverConfig.isBytedance,
+    Alibaba: serverConfig.isAlibaba,
+    Tencent: serverConfig.isTencent,
+    Moonshot: serverConfig.isMoonshot,
+    Iflytek: serverConfig.isIflytek,
+    DeepSeek: serverConfig.isDeepSeek,
+    XAI: serverConfig.isXAI,
+    ChatGLM: serverConfig.isChatGLM,
+    SiliconFlow: serverConfig.isSiliconFlow,
+    Stability: serverConfig.isStability,
+  } as Record<string, boolean>,
 };
 
 declare global {
