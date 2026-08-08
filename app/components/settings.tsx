@@ -1871,7 +1871,7 @@ export function Settings() {
                   chatglmApiKey: accessStore.chatglmApiKey,
                   siliconflowApiKey: accessStore.siliconflowApiKey,
                   stabilityApiKey: accessStore.stabilityApiKey,
-                  customModels: shareConfig.customModels,
+                  customModels: config.customModels,
                   accessCode: accessStore.accessCode,
                   useCustomConfig: true,
                   sharePw: sharePassword || "",
