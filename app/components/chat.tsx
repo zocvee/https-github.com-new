@@ -8,7 +8,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
 import RenameIcon from "../icons/rename.svg";
