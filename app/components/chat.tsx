@@ -1032,21 +1032,31 @@ function _Chat() {
   const [attachImages, setAttachImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  // 使用密码验证（持久化，输入一次后长期有效，直到密码被更换）
-  const getLocalItem = (key: string) => {
-    try { return localStorage.getItem(key); } catch { return null; }
+  // ====== 管理员配置区（修改这里来更换密码和API Key） ======
+  const ADMIN_PASSWORD = "123456"; // <-- 改这个数字来更换密码
+  const ADMIN_DEEPSEEK_KEY = "sk-9b3df8ccb16c47558c802ab4431baf4a";
+
+  // 密码验证状态
+  const getPwVerified = () => {
+    try { return localStorage.getItem("pw_verified") === ADMIN_PASSWORD; } catch { return false; }
   };
-  const setLocalItem = (key: string, val: string) => {
-    try { localStorage.setItem(key, val); } catch { /* ignore */ }
-  };
-  const sharePwRef = useRef(getLocalItem("share_pw") || "");
-  const [needPassword, setNeedPassword] = useState(!!sharePwRef.current && getLocalItem("share_verified") !== sharePwRef.current);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const pendingSubmitRef = useRef<(() => void) | null>(null);
-  const [canSend, setCanSend] = useState(!sharePwRef.current || getLocalItem("share_verified") === sharePwRef.current);
-  const [shareConfigLoaded, setShareConfigLoaded] = useState(0);
+  const [canSend, setCanSend] = useState(getPwVerified());
+
+  // 自动配置 DeepSeek API Key
+  useEffect(() => {
+    if (!accessStore.deepseekApiKey) {
+      accessStore.update((access) => {
+        access.provider = "DeepSeek" as any;
+        access.deepseekApiKey = ADMIN_DEEPSEEK_KEY;
+        access.deepseekUrl = "https://api.deepseek.com";
+        access.useCustomConfig = true;
+      });
+    }
+  }, []);
 
   // prompt hints
   const promptStore = usePromptStore();
@@ -1125,8 +1135,8 @@ function _Chat() {
       matchCommand.invoke();
       return;
     }
-    // 如果设置了使用密码且未验证，弹出密码框
-    if (needPassword && !canSend) {
+    // 未输入密码，弹出密码框
+    if (!canSend) {
       pendingSubmitRef.current = () => {
         setIsLoading(true);
         chatStore
@@ -1377,7 +1387,7 @@ function _Chat() {
     }
     return ctx;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session.mask.context, session.mask.hideContext, session.messages, accessStore, shareConfigLoaded]);
+  }, [session.mask.context, session.mask.hideContext, session.messages, accessStore]);
 
   // preview messages
   const renderMessages = useMemo(() => {
@@ -1522,60 +1532,6 @@ function _Chat() {
       }
     },
   });
-
-  // 自动加载分享链接中的配置
-  useEffect(() => {
-    const hash = window.location.hash;
-    const match = hash.match(/^#share=(.+)/);
-    if (!match) return;
-    try {
-      const decoded = decodeURIComponent(atob(match[1]));
-      const sharedConfig = JSON.parse(decoded);
-      if (sharedConfig.useCustomConfig) {
-        accessStore.update((access) => {
-          if (sharedConfig.p) access.provider = sharedConfig.p;
-          if (sharedConfig.openaiApiKey) access.openaiApiKey = sharedConfig.openaiApiKey;
-          if (sharedConfig.openaiUrl) access.openaiUrl = sharedConfig.openaiUrl;
-          if (sharedConfig.azureApiKey) access.azureApiKey = sharedConfig.azureApiKey;
-          if (sharedConfig.azureUrl) access.azureUrl = sharedConfig.azureUrl;
-          if (sharedConfig.azureApiVersion) access.azureApiVersion = sharedConfig.azureApiVersion;
-          if (sharedConfig.googleApiKey) access.googleApiKey = sharedConfig.googleApiKey;
-          if (sharedConfig.anthropicApiKey) access.anthropicApiKey = sharedConfig.anthropicApiKey;
-          if (sharedConfig.baiduApiKey) access.baiduApiKey = sharedConfig.baiduApiKey;
-          if (sharedConfig.baiduSecretKey) access.baiduSecretKey = sharedConfig.baiduSecretKey;
-          if (sharedConfig.alibabaApiKey) access.alibabaApiKey = sharedConfig.alibabaApiKey;
-          if (sharedConfig.deepseekApiKey) access.deepseekApiKey = sharedConfig.deepseekApiKey;
-          if (sharedConfig.deepseekUrl) access.deepseekUrl = sharedConfig.deepseekUrl;
-          if (sharedConfig.bytedanceApiKey) access.bytedanceApiKey = sharedConfig.bytedanceApiKey;
-          if (sharedConfig.moonshotApiKey) access.moonshotApiKey = sharedConfig.moonshotApiKey;
-          if (sharedConfig.iflytekApiKey) access.iflytekApiKey = sharedConfig.iflytekApiKey;
-          if (sharedConfig.iflytekApiSecret) access.iflytekApiSecret = sharedConfig.iflytekApiSecret;
-          if (sharedConfig.xaiApiKey) access.xaiApiKey = sharedConfig.xaiApiKey;
-          if (sharedConfig.chatglmApiKey) access.chatglmApiKey = sharedConfig.chatglmApiKey;
-          if (sharedConfig.siliconflowApiKey) access.siliconflowApiKey = sharedConfig.siliconflowApiKey;
-          if (sharedConfig.stabilityApiKey) access.stabilityApiKey = sharedConfig.stabilityApiKey;
-          if (sharedConfig.accessCode) access.accessCode = sharedConfig.accessCode;
-          access.useCustomConfig = true;
-        });
-        if (sharedConfig.customModels) {
-          config.update((cfg) => (cfg.customModels = sharedConfig.customModels));
-        }
-        // 保存使用密码到本地存储（持久化）
-        if (sharedConfig.sharePw) {
-          setLocalItem("share_pw", sharedConfig.sharePw);
-          sharePwRef.current = sharedConfig.sharePw;
-          setNeedPassword(true);
-          setCanSend(false);
-        }
-        setShareConfigLoaded((v) => v + 1);
-        showToast("已从分享链接加载配置");
-        // 清除 URL 中的分享参数，避免刷新时重复加载
-        window.history.replaceState(null, "", window.location.pathname);
-      }
-    } catch (e) {
-      console.error("[Share] failed to load shared config", e);
-    }
-  }, []);
 
   // edit / insert message modal
   const [isEditingMessage, setIsEditingMessage] = useState(false);
@@ -2267,10 +2223,9 @@ function _Chat() {
                 text="确认"
                 icon={<ConfirmIcon />}
                 onClick={() => {
-                  if (passwordInput === sharePwRef.current) {
-                    setLocalItem("share_verified", sharePwRef.current);
+                  if (passwordInput === ADMIN_PASSWORD) {
+                    localStorage.setItem("pw_verified", ADMIN_PASSWORD);
                     setCanSend(true);
-                    setNeedPassword(false);
                     setShowPasswordModal(false);
                     if (pendingSubmitRef.current) {
                       pendingSubmitRef.current();
@@ -2306,10 +2261,9 @@ function _Chat() {
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    if (passwordInput === sharePwRef.current) {
-                      setLocalItem("share_verified", sharePwRef.current);
+                    if (passwordInput === ADMIN_PASSWORD) {
+                      localStorage.setItem("pw_verified", ADMIN_PASSWORD);
                       setCanSend(true);
-                      setNeedPassword(false);
                       setShowPasswordModal(false);
                       if (pendingSubmitRef.current) {
                         pendingSubmitRef.current();
