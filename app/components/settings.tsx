@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 
 import styles from "./settings.module.scss";
-
 import ResetIcon from "../icons/reload.svg";
 import AddIcon from "../icons/add.svg";
 import CloseIcon from "../icons/close.svg";
