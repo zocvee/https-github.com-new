@@ -1033,13 +1033,19 @@ function _Chat() {
   const [uploading, setUploading] = useState(false);
 
   // 使用密码验证（持久化，输入一次后长期有效，直到密码被更换）
-  const sharePwRef = useRef(localStorage.getItem("share_pw") || "");
-  const [needPassword, setNeedPassword] = useState(!!sharePwRef.current && localStorage.getItem("share_verified") !== sharePwRef.current);
+  const getLocalItem = (key: string) => {
+    try { return localStorage.getItem(key); } catch { return null; }
+  };
+  const setLocalItem = (key: string, val: string) => {
+    try { localStorage.setItem(key, val); } catch { /* ignore */ }
+  };
+  const sharePwRef = useRef(getLocalItem("share_pw") || "");
+  const [needPassword, setNeedPassword] = useState(!!sharePwRef.current && getLocalItem("share_verified") !== sharePwRef.current);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const pendingSubmitRef = useRef<(() => void) | null>(null);
-  const [canSend, setCanSend] = useState(!sharePwRef.current || localStorage.getItem("share_verified") === sharePwRef.current);
+  const [canSend, setCanSend] = useState(!sharePwRef.current || getLocalItem("share_verified") === sharePwRef.current);
 
   // prompt hints
   const promptStore = usePromptStore();
@@ -1554,7 +1560,7 @@ function _Chat() {
         }
         // 保存使用密码到本地存储（持久化）
         if (sharedConfig.sharePw) {
-          localStorage.setItem("share_pw", sharedConfig.sharePw);
+          setLocalItem("share_pw", sharedConfig.sharePw);
           sharePwRef.current = sharedConfig.sharePw;
           setNeedPassword(true);
           setCanSend(false);
@@ -2259,7 +2265,7 @@ function _Chat() {
                 icon={<ConfirmIcon />}
                 onClick={() => {
                   if (passwordInput === sharePwRef.current) {
-                    localStorage.setItem("share_verified", sharePwRef.current);
+                    setLocalItem("share_verified", sharePwRef.current);
                     setCanSend(true);
                     setNeedPassword(false);
                     setShowPasswordModal(false);
@@ -2298,7 +2304,7 @@ function _Chat() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     if (passwordInput === sharePwRef.current) {
-                      localStorage.setItem("share_verified", sharePwRef.current);
+                      setLocalItem("share_verified", sharePwRef.current);
                       setCanSend(true);
                       setNeedPassword(false);
                       setShowPasswordModal(false);
@@ -2322,6 +2328,7 @@ function _Chat() {
     </>
   );
 }
+
 export function Chat() {
   const chatStore = useChatStore();
   const session = chatStore.currentSession();
