@@ -36,7 +36,6 @@ import { collectModelsWithDefaultModel } from "../utils/model";
 import { createEmptyMask, Mask } from "./mask";
 
 const localStorage = safeLocalStorage();
-
 export type ChatMessageTool = {
   id: string;
   index?: number;
