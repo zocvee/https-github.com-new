@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 
 import styles from "./settings.module.scss";
+
 import ResetIcon from "../icons/reload.svg";
 import AddIcon from "../icons/add.svg";
 import CloseIcon from "../icons/close.svg";
@@ -1840,7 +1841,7 @@ export function Settings() {
             <IconButton
               text="复制分享链接"
               onClick={() => {
-                const config = {
+                const shareConfig = {
                   p: accessStore.provider,
                   openaiApiKey: accessStore.openaiApiKey,
                   openaiUrl: accessStore.openaiUrl,
@@ -1870,12 +1871,12 @@ export function Settings() {
                   chatglmApiKey: accessStore.chatglmApiKey,
                   siliconflowApiKey: accessStore.siliconflowApiKey,
                   stabilityApiKey: accessStore.stabilityApiKey,
-                  customModels: config.customModels,
+                  customModels: shareConfig.customModels,
                   accessCode: accessStore.accessCode,
                   useCustomConfig: true,
                   sharePw: sharePassword || "",
                 };
-                const encoded = btoa(encodeURIComponent(JSON.stringify(config)));
+                const encoded = btoa(encodeURIComponent(JSON.stringify(shareConfig)));
                 const url = `${location.origin}/#share=${encoded}`;
                 copyToClipboard(url);
                 showToast("分享链接已复制！" + (sharePassword ? "使用时需要输入密码" : "在其他设备打开即可自动配置"));
