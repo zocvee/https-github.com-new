@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
 import RenameIcon from "../icons/rename.svg";
@@ -65,6 +66,7 @@ import {
   copyToClipboard,
   getMessageImages,
   getMessageTextContent,
+  getMessageTextContentWithoutThinking,
   isDalle3,
   isVisionModel,
   safeLocalStorage,
@@ -2010,9 +2012,16 @@ function _Chat() {
                             </div>
                           )}
                           <div className={styles["chat-message-item"]}>
+                            {!isUser && message.thinkingContent && (
+                              <ThinkingBlock message={message} />
+                            )}
                             <Markdown
                               key={message.streaming ? "loading" : "done"}
-                              content={getMessageTextContent(message)}
+                              content={
+                                message.thinkingContent
+                                  ? getMessageTextContentWithoutThinking(message)
+                                  : getMessageTextContent(message)
+                              }
                               loading={
                                 (message.preview || message.streaming) &&
                                 message.content.length === 0 &&
@@ -2282,6 +2291,87 @@ function _Chat() {
         </div>
       )}
     </>
+  );
+}
+
+function formatThinkingTime(ms: number): string {
+  if (ms < 1000) return `${ms}ms`;
+  const seconds = (ms / 1000).toFixed(1);
+  return `${seconds}s`;
+}
+
+function ThinkingBlock(props: { message: ChatMessage }) {
+  const { message } = props;
+  const [expanded, setExpanded] = useState(false);
+  const [duration, setDuration] = useState(
+    message.thinkingDuration || 0,
+  );
+  const timerRef = useRef<ReturnType<typeof setInterval>>();
+
+  // Update duration when thinking is still in progress
+  useEffect(() => {
+    if (message.streaming && message.thinkingContent && !message.thinkingDuration) {
+      timerRef.current = setInterval(() => {
+        setDuration(Date.now() - (message.thinkingStartTime || Date.now()));
+      }, 100);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      if (message.thinkingDuration) {
+        setDuration(message.thinkingDuration);
+      }
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [message.streaming, message.thinkingContent, message.thinkingDuration, message.thinkingStartTime]);
+
+  // Auto-collapse when thinking finishes
+  useEffect(() => {
+    if (!message.streaming && message.thinkingContent) {
+      setExpanded(false);
+    }
+  }, [message.streaming, message.thinkingContent]);
+
+  const thinkingContent = message.thinkingContent || "";
+
+  return (
+    <div className={styles["thinking-block"]}>
+      <div
+        className={styles["thinking-header"]}
+        onClick={() => setExpanded(!expanded)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+      >
+        <span className={styles["thinking-expand-icon"]}>
+          {expanded ? "▼" : "▶"}
+        </span>
+        <span className={styles["thinking-label"]}>
+          {message.streaming ? "思考中..." : "思考过程"}
+        </span>
+        <span className={styles["thinking-duration"]}>
+          {formatThinkingTime(duration)}
+        </span>
+      </div>
+      {expanded && (
+        <div className={styles["thinking-content"]}>
+          <Markdown
+            content={thinkingContent}
+            defaultShow={true}
+            fontSize={14}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
