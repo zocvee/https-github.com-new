@@ -1046,6 +1046,7 @@ function _Chat() {
   const [passwordError, setPasswordError] = useState("");
   const pendingSubmitRef = useRef<(() => void) | null>(null);
   const [canSend, setCanSend] = useState(!sharePwRef.current || getLocalItem("share_verified") === sharePwRef.current);
+  const [shareConfigLoaded, setShareConfigLoaded] = useState(0);
 
   // prompt hints
   const promptStore = usePromptStore();
@@ -1363,19 +1364,20 @@ function _Chat() {
   }
 
   const context: RenderMessage[] = useMemo(() => {
-    return session.mask.hideContext ? [] : session.mask.context.slice();
-  }, [session.mask.context, session.mask.hideContext]);
-
-  if (
-    context.length === 0 &&
-    session.messages.at(0)?.content !== BOT_HELLO.content
-  ) {
-    const copiedHello = Object.assign({}, BOT_HELLO);
-    if (!accessStore.isAuthorized()) {
-      copiedHello.content = Locale.Error.Unauthorized;
+    const ctx = session.mask.hideContext ? [] : session.mask.context.slice();
+    if (
+      ctx.length === 0 &&
+      session.messages.at(0)?.content !== BOT_HELLO.content
+    ) {
+      const copiedHello = Object.assign({}, BOT_HELLO);
+      if (!accessStore.isAuthorized()) {
+        copiedHello.content = Locale.Error.Unauthorized;
+      }
+      ctx.push(copiedHello);
     }
-    context.push(copiedHello);
-  }
+    return ctx;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.mask.context, session.mask.hideContext, session.messages, accessStore, shareConfigLoaded]);
 
   // preview messages
   const renderMessages = useMemo(() => {
@@ -1565,6 +1567,7 @@ function _Chat() {
           setNeedPassword(true);
           setCanSend(false);
         }
+        setShareConfigLoaded((v) => v + 1);
         showToast("已从分享链接加载配置");
         // 清除 URL 中的分享参数，避免刷新时重复加载
         window.history.replaceState(null, "", window.location.pathname);
