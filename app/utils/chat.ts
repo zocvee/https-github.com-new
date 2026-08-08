@@ -11,6 +11,7 @@ import {
 } from "@fortaine/fetch-event-source";
 import { prettyObject } from "./format";
 import { fetch as tauriFetch } from "./stream";
+
 export function compressImage(file: Blob, maxSize: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -445,6 +446,7 @@ export function streamWithThink(
               ? thinkingEndTime - thinkingStartTime
               : Date.now() - thinkingStartTime,
             thinkingFinished: !!thinkingEndTime,
+            thinkingStartTime: thinkingStartTime,
           }
         : null;
       options.onUpdate?.(responseText, fetchText, thinkingInfo);
