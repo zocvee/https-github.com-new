@@ -10,8 +10,10 @@
     "schema": "https://ghp.ci/https://raw.githubusercontent.com/ChatGPTNextWeb/NextChat-Awesome-Plugins/main/plugins/arxivsearch/openapi.json"
   },
   {
-    "id": "duckduckgosearch",
-    "name": "DuckDuckGoSearch",
-    "schema": "./duckduckgolite-openapi.json"
+    "id": "tavilysearch",
+    "name": "TavilySearch",
+    "schema": "./tavily-openapi.json",
+    "authType": "bearer",
+    "authToken": "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"
   }
 ]
