@@ -18,26 +18,35 @@ async function handleRequest(request) {
     const targetURL = `${baseURL}/${subpath}?${searchParams.toString()}`;
 
     try {
+      // 使用干净的请求头，避免传递原始 Host 等头导致问题
       const proxyRes = await fetch(targetURL, {
         method: request.method,
-        headers: request.headers,
-        body: request.method !== "GET" && request.method !== "HEAD" 
-          ? await request.text() 
-          : undefined,
+        headers: {
+          "Accept": "application/json",
+          "User-Agent": "ESA-Edge-Function/1.0",
+        },
         redirect: "follow",
       });
 
-      const resHeaders = new Headers(proxyRes.headers);
+      const resHeaders = new Headers();
+      resHeaders.set("Content-Type", "application/json");
       resHeaders.set("Access-Control-Allow-Origin", "*");
       resHeaders.set("Access-Control-Allow-Methods", "*");
       resHeaders.set("Access-Control-Allow-Headers", "*");
 
-      return new Response(proxyRes.body, {
+      const body = await proxyRes.text();
+      return new Response(body, {
         status: proxyRes.status,
         headers: resHeaders,
       });
     } catch (err) {
-      return new Response(`Proxy error: ${err.message}`, { status: 502 });
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 502,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
   }
 
