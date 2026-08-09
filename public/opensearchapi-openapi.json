@@ -1,0 +1,46 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenSearchAPI Search",
+    "description": "Search the web using OpenSearchAPI. Supports Google, DuckDuckGo, and Bing. Returns JSON formatted search results.",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://search.zocvee.xyz"
+    }
+  ],
+  "paths": {
+    "/search": {
+      "get": {
+        "operationId": "OpenSearchAPISearch",
+        "description": "Search the web for current information. Use this to find real-time news, facts, and data. Supports engines: google, duckduckgo, bing.",
+        "deprecated": false,
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Search query keywords",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "engines",
+            "in": "query",
+            "required": false,
+            "description": "Search engine to use. Options: google, duckduckgo, bing. Default: bing",
+            "schema": {
+              "type": "string",
+              "default": "bing"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}
