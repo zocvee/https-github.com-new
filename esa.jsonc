@@ -1,5 +1,6 @@
 {
   "name": "nextchat",
+  "entry": "./esa-edge.js",
   "installCommand": "yarn install",
   "buildCommand": "yarn export",
   "assets": {
