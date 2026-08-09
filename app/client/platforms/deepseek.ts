@@ -137,9 +137,9 @@ export class DeepSeekApi implements LLMApi {
       );
 
       if (shouldStream) {
-        // 默认启用 Tavily 搜索插件，为所有模型提供联网能力
+        // 默认启用 OpenSearchAPI 搜索插件，为所有模型提供联网能力
         const maskPlugins = useChatStore.getState().currentSession().mask?.plugin || [];
-        const allPlugins = [...new Set([...maskPlugins, "tavilysearch"])];
+        const allPlugins = [...new Set([...maskPlugins, "opensearchapisearch"])];
         const [tools, funcs] = usePluginStore
           .getState()
           .getAsTools(allPlugins);
