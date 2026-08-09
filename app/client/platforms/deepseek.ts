@@ -137,9 +137,9 @@ export class DeepSeekApi implements LLMApi {
       );
 
       if (shouldStream) {
-        // 默认启用 DuckDuckGo Lite 搜索插件，为所有模型提供联网能力
+        // 默认启用 Tavily 搜索插件，为所有模型提供联网能力
         const maskPlugins = useChatStore.getState().currentSession().mask?.plugin || [];
-        const allPlugins = [...new Set([...maskPlugins, "duckduckgosearch"])];
+        const allPlugins = [...new Set([...maskPlugins, "tavilysearch"])];
         const [tools, funcs] = usePluginStore
           .getState()
           .getAsTools(allPlugins);
