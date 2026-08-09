@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "duckduckgo lite",
-    "description": "a search engine. useful for when you need to answer questions about current events. input should be a search query.",
+    "title": "DuckDuckGo Search",
+    "description": "Search the web using DuckDuckGo. Returns JSON formatted search results. Use this tool to search for real-time information, news, and current events.",
     "version": "v1.0.0"
   },
   "servers": [
@@ -12,58 +12,38 @@
   ],
   "paths": {
     "/lite/": {
-      "post": {
+      "get": {
         "operationId": "DuckDuckGoLiteSearch",
-        "description": "a search engine. useful for when you need to answer questions about current events. input should be a search query.",
+        "description": "Search the web for current information. Use this to find real-time news, facts, and data. IMPORTANT: Always include o=json and api=d.js parameters.",
         "deprecated": false,
         "parameters": [
           {
             "name": "q",
             "in": "query",
             "required": true,
-            "description": "keywords for query.",
+            "description": "Search query keywords",
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "s",
-            "in": "query",
-            "description": "can be `0`",
-            "schema": {
-              "type": "number"
             }
           },
           {
             "name": "o",
             "in": "query",
-            "description": "can be `json`",
+            "required": true,
+            "description": "Output format. MUST be set to 'json'",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "default": "json"
             }
           },
           {
             "name": "api",
             "in": "query",
-            "description": "can be `d.js`",
+            "required": true,
+            "description": "API type. MUST be set to 'd.js'",
             "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "kl",
-            "in": "query",
-            "description": "wt-wt, us-en, uk-en, ru-ru, etc. Defaults to `wt-wt`.",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "bing_market",
-            "in": "query",
-            "description": "wt-wt, us-en, uk-en, ru-ru, etc. Defaults to `wt-wt`.",
-            "schema": {
-              "type": "string"
+              "type": "string",
+              "default": "d.js"
             }
           }
         ]
