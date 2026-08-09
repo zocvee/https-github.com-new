@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://search.zocvee.xyz"
+      "url": "http://search.zocvee.xyz:3000"
     }
   ],
   "paths": {
