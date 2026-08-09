@@ -10,8 +10,8 @@
     "schema": "https://ghp.ci/https://raw.githubusercontent.com/ChatGPTNextWeb/NextChat-Awesome-Plugins/main/plugins/arxivsearch/openapi.json"
   },
   {
-    "id": "duckduckgolite",
-    "name": "DuckDuckGoLiteSearch",
+    "id": "duckduckgosearch",
+    "name": "DuckDuckGoSearch",
     "schema": "./duckduckgolite-openapi.json"
   }
 ]
