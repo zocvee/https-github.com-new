@@ -1,0 +1,66 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Tavily Search",
+    "description": "Tavily Search API - AI-optimized web search engine. Returns ranked results with titles, URLs, content snippets, and relevance scores. Use this to search for real-time information, news, and current events.",
+    "version": "v1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.tavily.com"
+    }
+  ],
+  "paths": {
+    "/search": {
+      "post": {
+        "operationId": "tavilySearch",
+        "description": "Search the web using Tavily's AI-optimized search engine. Returns clean, structured results perfect for LLM agents.",
+        "deprecated": false,
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["query"],
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "The search query to execute."
+                  },
+                  "search_depth": {
+                    "type": "string",
+                    "description": "Search depth: 'basic' (balanced, 1 credit) or 'advanced' (highest relevance, 2 credits).",
+                    "enum": ["basic", "advanced"],
+                    "default": "basic"
+                  },
+                  "max_results": {
+                    "type": "integer",
+                    "description": "Maximum number of search results to return (1-20).",
+                    "minimum": 1,
+                    "maximum": 20,
+                    "default": 5
+                  },
+                  "topic": {
+                    "type": "string",
+                    "description": "Category: 'general' for broad searches, 'news' for real-time news.",
+                    "enum": ["general", "news"],
+                    "default": "general"
+                  },
+                  "include_answer": {
+                    "type": "boolean",
+                    "description": "Include an AI-generated answer summary for the query.",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}
