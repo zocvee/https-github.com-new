@@ -630,13 +630,13 @@ const xAIModes = [
 ];
 
 const chatglmModels = [
-  "glm-4-plus",
-  "glm-4-airx",
-  "glm-4-long",
-  "glm-4-flashx",
-  "glm-4v-plus",
-  "cogview-3-plus",
-  "cogview-3-flash",
+  "glm-4-plus",      // 保留：最强旗舰
+  "glm-4-airx",       // 保留：速度性能平衡 → 替代 glm-4-air
+  "glm-4-long",       // 保留：超长上下文
+  "glm-4-flashx",     // 保留：极致低延迟 → 替代 glm-4-flash
+  "glm-4v-plus",      // 保留：最强视觉 → 替代 glm-4v, glm-4v-flash
+  "cogview-3-plus",   // 保留：高质量文生图 → 替代 cogview-3
+  "cogview-3-flash",   // 保留：快速低成本文生图
 ];
 
 const siliconflowModels = [
@@ -790,7 +790,7 @@ export const DEFAULT_MODELS = [
       providerType: "chatglm",
       sorted: 12,
     },
-  })),
+})),
     ...deepseekModels.map((name) => ({
     name,
     available: true,
@@ -802,7 +802,7 @@ export const DEFAULT_MODELS = [
       providerType: "deepseek",
       sorted: 13,
     },
-  })),
+})),
   ...siliconflowModels.map((name) => ({
     name,
     available: true,
