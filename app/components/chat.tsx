@@ -681,12 +681,13 @@ export function ChatActions(props: {
         {showModelSelector && (
           <Selector
             defaultSelectedValue={`${currentModel}@${currentProviderName}`}
-            items={models.map((m) => ({
+                        items={models.map((m) => ({
               title: `${m.displayName}${
                 m?.provider?.providerName
                   ? " (" + m?.provider?.providerName + ")"
                   : ""
               }`,
+              subTitle: m.description || "",
               value: `${m.name}@${m?.provider?.providerName}`,
             }))}
             onClose={() => setShowModelSelector(false)}
