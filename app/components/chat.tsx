@@ -8,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+
 import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
 import RenameIcon from "../icons/rename.svg";
@@ -1035,6 +1036,7 @@ function _Chat() {
   // ====== 管理员配置区（修改这里来更换密码和API Key） ======
   const ADMIN_PASSWORD = "123456"; // <-- 改这个数字来更换密码
   const ADMIN_DEEPSEEK_KEY = "sk-9b3df8ccb16c47558c802ab4431baf4a";
+  const ADMIN_CHATGLM_KEY = "8fdd09efe0ac4784bc0076bcb0b9577c.By2iouvNnY7AlvNw";
 
   // 密码验证状态
   const getPwVerified = () => {
@@ -1054,6 +1056,16 @@ function _Chat() {
         access.deepseekApiKey = ADMIN_DEEPSEEK_KEY;
         access.deepseekUrl = "https://api.deepseek.com";
         access.useCustomConfig = true;
+      });
+    }
+  }, []);
+
+  // 自动配置 ChatGLM API Key
+  useEffect(() => {
+    if (!accessStore.chatglmApiKey) {
+      accessStore.update((access) => {
+        access.chatglmApiKey = ADMIN_CHATGLM_KEY;
+        access.chatglmUrl = "https://open.bigmodel.cn";
       });
     }
   }, []);
