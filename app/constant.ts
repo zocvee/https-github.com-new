@@ -601,6 +601,23 @@ const iflytekModels = [
 
 const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner", "deepseek-v4-flash"];
 
+const chatglmModelDescriptions: Record<string, string> = {
+  "glm-4-plus": "最强推理 · 旗舰版",
+  "glm-4-airx": "速度与性能最佳平衡",
+  "glm-4-long": "超长上下文 · 128K",
+  "glm-4-flashx": "极致低延迟 · 闪电响应",
+  "glm-4v-plus": "最强视觉 · 图片理解",
+  "cogview-3-plus": "高质量文生图",
+  "cogview-3-flash": "快速文生图 · 低成本",
+};
+
+const deepseekModelDescriptions: Record<string, string> = {
+  "deepseek-chat": "通用对话 · V3 旗舰",
+  "deepseek-coder": "代码专用 · 补全生成",
+  "deepseek-reasoner": "深度推理 · R1 思维链",
+  "deepseek-v4-flash": "新一代极速 · V4 架构",
+};
+
 const xAIModes = [
   "grok-beta",
   "grok-2",
@@ -614,22 +631,12 @@ const xAIModes = [
 
 const chatglmModels = [
   "glm-4-plus",
-  "glm-4-0520",
-  "glm-4",
-  "glm-4-air",
   "glm-4-airx",
   "glm-4-long",
   "glm-4-flashx",
-  "glm-4-flash",
   "glm-4v-plus",
-  "glm-4v",
-  "glm-4v-flash", // free
   "cogview-3-plus",
-  "cogview-3",
-  "cogview-3-flash", // free
-  // 目前无法适配轮询任务
-  //   "cogvideox",
-  //   "cogvideox-flash", // free
+  "cogview-3-flash",
 ];
 
 const siliconflowModels = [
@@ -772,10 +779,11 @@ export const DEFAULT_MODELS = [
       sorted: 11,
     },
   })),
-  ...chatglmModels.map((name) => ({
+    ...chatglmModels.map((name) => ({
     name,
     available: true,
     sorted: seq++,
+    description: chatglmModelDescriptions[name],
     provider: {
       id: "chatglm",
       providerName: "ChatGLM",
@@ -783,10 +791,11 @@ export const DEFAULT_MODELS = [
       sorted: 12,
     },
   })),
-  ...deepseekModels.map((name) => ({
+    ...deepseekModels.map((name) => ({
     name,
     available: true,
     sorted: seq++,
+    description: deepseekModelDescriptions[name],
     provider: {
       id: "deepseek",
       providerName: "DeepSeek",
