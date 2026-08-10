@@ -601,6 +601,27 @@ const iflytekModels = [
 
 const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner", "deepseek-v4-flash"];
 
+const xAIModes = [
+  "grok-beta",
+  "grok-2",
+  "grok-2-1212",
+  "grok-2-latest",
+  "grok-vision-beta",
+  "grok-2-vision-1212",
+  "grok-2-vision",
+  "grok-2-vision-latest",
+];
+
+const chatglmModels = [
+  "glm-4-plus",
+  "glm-4-airx",
+  "glm-4-long",
+  "glm-4-flashx",
+  "glm-4v-plus",
+  "cogview-3-plus",
+  "cogview-3-flash",
+];
+
 const chatglmModelDescriptions: Record<string, string> = {
   "glm-4-plus": "最强推理 · 旗舰版",
   "glm-4-airx": "速度与性能最佳平衡",
@@ -618,43 +639,31 @@ const deepseekModelDescriptions: Record<string, string> = {
   "deepseek-v4-flash": "新一代极速 · V4 架构",
 };
 
-const xAIModes = [
-  "grok-beta",
-  "grok-2",
-  "grok-2-1212",
-  "grok-2-latest",
-  "grok-vision-beta",
-  "grok-2-vision-1212",
-  "grok-2-vision",
-  "grok-2-vision-latest",
-];
-
-const chatglmModels = [
-  "glm-4-plus",      // 保留：最强旗舰
-  "glm-4-airx",       // 保留：速度性能平衡 → 替代 glm-4-air
-  "glm-4-long",       // 保留：超长上下文
-  "glm-4-flashx",     // 保留：极致低延迟 → 替代 glm-4-flash
-  "glm-4v-plus",      // 保留：最强视觉 → 替代 glm-4v, glm-4v-flash
-  "cogview-3-plus",   // 保留：高质量文生图 → 替代 cogview-3
-  "cogview-3-flash",   // 保留：快速低成本文生图
-];
-
 const siliconflowModels = [
-  "Qwen/Qwen2.5-7B-Instruct",
   "Qwen/Qwen2.5-72B-Instruct",
+  "Qwen/Qwen3.6-35B-A3B",
   "deepseek-ai/DeepSeek-R1",
-  "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
-  "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
-  "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
-  "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
-  "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
-  "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
   "deepseek-ai/DeepSeek-V3",
-  "meta-llama/Llama-3.3-70B-Instruct",
+  "deepseek-ai/DeepSeek-V4-Pro",
+  "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
   "THUDM/glm-4-9b-chat",
+  "Pro/Qwen/Qwen3-235B-A22B",
   "Pro/deepseek-ai/DeepSeek-R1",
   "Pro/deepseek-ai/DeepSeek-V3",
 ];
+
+const siliconflowModelDescriptions: Record<string, string> = {
+  "Qwen/Qwen2.5-72B-Instruct": "通义千问 · 72B 旗舰",
+  "Qwen/Qwen3.6-35B-A3B": "Qwen3.6 MoE · 高效推理",
+  "deepseek-ai/DeepSeek-R1": "深度推理 · 思维链",
+  "deepseek-ai/DeepSeek-V3": "通用旗舰 · V3",
+  "deepseek-ai/DeepSeek-V4-Pro": "最新 · V4 专业版",
+  "meta-llama/Llama-4-Maverick-17B-128E-Instruct": "Llama 4 · 开源标杆",
+  "THUDM/glm-4-9b-chat": "智谱轻量 · 永久免费",
+  "Pro/Qwen/Qwen3-235B-A22B": "Qwen3 超大 · 高并发",
+  "Pro/deepseek-ai/DeepSeek-R1": "R1 推理 · 高并发",
+  "Pro/deepseek-ai/DeepSeek-V3": "V3 旗舰 · 高并发",
+};
 
 let seq = 1000; // 内置的模型序号生成器从1000开始
 export const DEFAULT_MODELS = [
@@ -779,7 +788,7 @@ export const DEFAULT_MODELS = [
       sorted: 11,
     },
   })),
-    ...chatglmModels.map((name) => ({
+  ...chatglmModels.map((name) => ({
     name,
     available: true,
     sorted: seq++,
@@ -790,8 +799,8 @@ export const DEFAULT_MODELS = [
       providerType: "chatglm",
       sorted: 12,
     },
-})),
-    ...deepseekModels.map((name) => ({
+  })),
+  ...deepseekModels.map((name) => ({
     name,
     available: true,
     sorted: seq++,
@@ -802,11 +811,12 @@ export const DEFAULT_MODELS = [
       providerType: "deepseek",
       sorted: 13,
     },
-})),
+  })),
   ...siliconflowModels.map((name) => ({
     name,
     available: true,
     sorted: seq++,
+    description: siliconflowModelDescriptions[name],
     provider: {
       id: "siliconflow",
       providerName: "SiliconFlow",
