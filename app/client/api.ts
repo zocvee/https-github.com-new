@@ -92,6 +92,7 @@ export interface LLMUsage {
 export interface LLMModel {
   name: string;
   displayName?: string;
+  description?: string;
   available: boolean;
   provider: LLMModelProvider;
   sorted: number;
