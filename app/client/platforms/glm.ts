@@ -206,11 +206,12 @@ export class ChatGLMApi implements LLMApi {
 
       const shouldStream = !!options.config.stream;
       if (shouldStream) {
+        // 默认启用 OpenSearchAPI 搜索插件，为所有模型提供联网能力
+        const maskPlugins = useChatStore.getState().currentSession().mask?.plugin || [];
+        const allPlugins = [...new Set([...maskPlugins, "opensearchapisearch"])];
         const [tools, funcs] = usePluginStore
           .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
+          .getAsTools(allPlugins);
         return stream(
           path,
           requestPayload,
