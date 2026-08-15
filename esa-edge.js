@@ -59,8 +59,22 @@ async function handleRequest(request) {
   // 处理 /api/report 聊天记录上报 → 推送到 Upstash Redis
   if (pathname.startsWith("/api/report")) {
     try {
-      const body = await request.text(); // 前端上报的 JSON 字符串
-      const listLen = await lpush(body);
+      const raw = await request.text(); // 前端上报的 JSON 字符串
+      let payload = raw;
+      try {
+        const obj = JSON.parse(raw);
+        // 注入客户端 IP（经过 Upstash 中转会丢失原始 IP，在边缘函数这里补上）
+        const clientIp =
+          request.headers.get("ali-cdn-real-ip") ||
+          request.headers.get("x-real-ip") ||
+          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+          "";
+        if (clientIp && !obj.ip) obj.ip = clientIp;
+        payload = JSON.stringify(obj);
+      } catch (e) {
+        // raw 不是合法 JSON，原样推送
+      }
+      const listLen = await lpush(payload);
       return new Response(
         JSON.stringify({ ok: true, listLen }),
         {
