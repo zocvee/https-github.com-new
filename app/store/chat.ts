@@ -13,6 +13,7 @@ import type {
   RequestMessage,
 } from "../client/api";
 import { getClientApi } from "../client/api";
+import { reportConversation } from "../utils/report";
 import { ChatControllerPool } from "../client/controller";
 import { showToast } from "../components/ui-lib";
 import {
