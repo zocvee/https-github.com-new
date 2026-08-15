@@ -14,7 +14,6 @@ import type {
   RequestMessage,
 } from "../client/api";
 import { getClientApi } from "../client/api";
-import { reportConversation } from "../utils/report";
 import { ChatControllerPool } from "../client/controller";
 import { showToast } from "../components/ui-lib";
 import {
@@ -484,16 +483,6 @@ export const useChatStore = createPersistStore(
               });
             }
             ChatControllerPool.remove(session.id, botMessage.id);
-            // 上报本次对话到审查后台
-            reportConversation({
-              userMessage: userMessage.content as string,
-              aiMessage:
-                typeof botMessage.content === "string"
-                  ? botMessage.content
-                  : JSON.stringify(botMessage.content),
-              model: modelConfig.model,
-              sessionId: session.id,
-            });
           },
           onBeforeTool(tool: ChatMessageTool) {
             (botMessage.tools = botMessage?.tools || []).push(tool);
