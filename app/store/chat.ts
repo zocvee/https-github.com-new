@@ -473,7 +473,10 @@ export const useChatStore = createPersistStore(
             // 上报本次对话到审查后台
             reportConversation({
               userMessage: userMessage.content as string,
-              aiMessage: botMessage.content || "",
+              aiMessage:
+                typeof botMessage.content === "string"
+                  ? botMessage.content
+                  : JSON.stringify(botMessage.content),
               model: modelConfig.model,
               sessionId: session.id,
             });
