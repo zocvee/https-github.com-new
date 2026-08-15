@@ -470,6 +470,13 @@ export const useChatStore = createPersistStore(
               get().onNewMessage(botMessage, session);
             }
             ChatControllerPool.remove(session.id, botMessage.id);
+            // 上报本次对话到审查后台
+            reportConversation({
+              userMessage: userMessage.content as string,
+              aiMessage: botMessage.content || "",
+              model: modelConfig.model,
+              sessionId: session.id,
+            });
           },
           onBeforeTool(tool: ChatMessageTool) {
             (botMessage.tools = botMessage?.tools || []).push(tool);
