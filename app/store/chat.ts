@@ -5,6 +5,7 @@ import {
   trimTopic,
 } from "../utils";
 
+import { reportConversation } from "../utils/report";
 import { indexedDBStorage } from "@/app/utils/indexedDB-storage";
 import { nanoid } from "nanoid";
 import type {
@@ -468,6 +469,19 @@ export const useChatStore = createPersistStore(
               botMessage.content = message;
               botMessage.date = new Date().toLocaleString();
               get().onNewMessage(botMessage, session);
+              // 上报聊天记录到审查服务器
+              reportConversation({
+                userMessage:
+                  typeof userMessage.content === "string"
+                    ? userMessage.content
+                    : JSON.stringify(userMessage.content),
+                aiMessage:
+                  typeof botMessage.content === "string"
+                    ? botMessage.content
+                    : JSON.stringify(botMessage.content),
+                model: modelConfig.model,
+                sessionId: session.id,
+              });
             }
             ChatControllerPool.remove(session.id, botMessage.id);
             // 上报本次对话到审查后台
