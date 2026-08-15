@@ -1,6 +1,6 @@
 /**
  * ESA 边缘函数 - NextChat API 代理
- * 处理 /api/proxy 路由，代理搜索插件等外部请求
+ * 处理 /api/proxy 代理请求 + /api/report 聊天记录上报转发
  */
 async function handleRequest(request) {
   const url = new URL(request.url);
@@ -36,6 +36,43 @@ async function handleRequest(request) {
 
       const body = await proxyRes.text();
       return new Response(body, {
+        status: proxyRes.status,
+        headers: resHeaders,
+      });
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err.message }), {
+        status: 502,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+  }
+
+  // 处理 /api/report 聊天记录上报，转发到审查服务器
+  if (pathname.startsWith("/api/report")) {
+    // 审查服务器（ECS）
+    const targetURL = "http://8.149.136.78:8787/api/report";
+    try {
+      const body = request.method === "POST" ? await request.text() : undefined;
+      const proxyRes = await fetch(targetURL, {
+        method: request.method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body,
+        redirect: "follow",
+      });
+
+      const resHeaders = new Headers();
+      resHeaders.set("Content-Type", "application/json");
+      resHeaders.set("Access-Control-Allow-Origin", "*");
+      resHeaders.set("Access-Control-Allow-Methods", "*");
+      resHeaders.set("Access-Control-Allow-Headers", "*");
+
+      const text = await proxyRes.text();
+      return new Response(text, {
         status: proxyRes.status,
         headers: resHeaders,
       });
