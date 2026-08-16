@@ -19,6 +19,7 @@ const CHATGLM_TARGET = "https://open.bigmodel.cn";
 // 服务端注入的模型密钥（前端不填时由边缘函数自动补上，避免密钥暴露）
 // 注意：此处密钥会写入边缘函数代码，请勿泄露
 const DEEPSEEK_API_KEY = "sk-0a4a991d0cf94804a28a544d569da69d";
+const CHATGLM_API_KEY = "8fdd09efe0ac4784bc0076bcb0b9577c.By2iouvNnY7AlvNw";
 
 async function handleRequest(request) {
   const url = new URL(request.url);
@@ -79,7 +80,7 @@ async function handleRequest(request) {
   if (pathname.startsWith("/api/chatglm")) {
     const subpath = pathname.replace(/^\/api\/chatglm\/?/, "");
     const targetURL = withQuery(`${CHATGLM_TARGET}/${subpath}`);
-    return await forwardModelRequest(request, targetURL);
+    return await forwardModelRequest(request, targetURL, CHATGLM_API_KEY);
   }
 
   // 处理 /api/report 聊天记录上报 → 推送到 Upstash Redis
