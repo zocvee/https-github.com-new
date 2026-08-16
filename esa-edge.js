@@ -1,7 +1,9 @@
 /**
- * ESA 边缘函数 - NextChat API 代理 + 聊天记录上报中转
- * /api/proxy  : 代理搜索插件等外部请求
- * /api/report : 把聊天记录推送到 Upstash Redis（审查服务器从 Upstash 拉取）
+ * ESA 边缘函数 - NextChat API 代理 + 模型代理 + 聊天记录上报中转
+ * /api/proxy      : 代理搜索插件等外部请求
+ * /api/deepseek   : 代理 DeepSeek 模型请求（转发 Authorization 密钥）
+ * /api/chatglm    : 代理 GLM 模型请求（转发 Authorization 密钥）
+ * /api/report     : 把聊天记录推送到 Upstash Redis（审查服务器从 Upstash 拉取）
  */
 
 // ========== Upstash Redis 连接信息（请务必备份，勿泄露） ==========
@@ -10,9 +12,15 @@ const UPSTASH_TOKEN = "gQAAAAAAAfV_AAIgcDE0NGFlYTI3ZTg2NTM0ZjQzOWE2ZGI5ZDlmY2RmN
 const REPORT_KEY = "chat_reports"; // 存放聊天记录的 Redis 列表 key
 // =================================================================
 
+// 模型 API 目标地址（与 app/api/deepseek.ts、app/api/glm.ts 的默认 baseUrl 一致）
+const DEEPSEEK_TARGET = "https://api.deepseek.com";
+const CHATGLM_TARGET = "https://open.bigmodel.cn";
+
 async function handleRequest(request) {
   const url = new URL(request.url);
   const { pathname, searchParams } = url;
+  const queryString = searchParams.toString();
+  const withQuery = (u) => (queryString ? `${u}?${queryString}` : u);
 
   // 处理 /api/proxy 代理请求
   if (pathname.startsWith("/api/proxy")) {
@@ -22,7 +30,7 @@ async function handleRequest(request) {
     }
 
     const subpath = pathname.replace(/^\/api\/proxy\/?/, "");
-    const targetURL = `${baseURL}/${subpath}?${searchParams.toString()}`;
+    const targetURL = `${baseURL}/${subpath}${queryString ? "?" + queryString : ""}`;
 
     try {
       const proxyRes = await fetch(targetURL, {
@@ -54,6 +62,20 @@ async function handleRequest(request) {
         },
       });
     }
+  }
+
+  // 处理 /api/deepseek 模型代理请求 → 转发到 DeepSeek API
+  if (pathname.startsWith("/api/deepseek")) {
+    const subpath = pathname.replace(/^\/api\/deepseek\/?/, "");
+    const targetURL = withQuery(`${DEEPSEEK_TARGET}/${subpath}`);
+    return await forwardModelRequest(request, targetURL);
+  }
+
+  // 处理 /api/chatglm 模型代理请求 → 转发到 GLM API
+  if (pathname.startsWith("/api/chatglm")) {
+    const subpath = pathname.replace(/^\/api\/chatglm\/?/, "");
+    const targetURL = withQuery(`${CHATGLM_TARGET}/${subpath}`);
+    return await forwardModelRequest(request, targetURL);
   }
 
   // 处理 /api/report 聊天记录上报 → 推送到 Upstash Redis
@@ -112,6 +134,62 @@ async function handleRequest(request) {
   }
 
   return new Response("Not Found", { status: 404 });
+}
+
+// 转发模型请求：保留 Authorization 密钥头、Content-Type，透传请求体并流式返回响应
+async function forwardModelRequest(request, targetURL) {
+  // OPTIONS 预检
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "*",
+        "Access-Control-Allow-Headers": "*",
+        "Access-Control-Max-Age": "86400",
+      },
+    });
+  }
+
+  const headers = new Headers();
+  const contentType = request.headers.get("Content-Type");
+  if (contentType) headers.set("Content-Type", contentType);
+  const auth = request.headers.get("Authorization");
+  if (auth) headers.set("Authorization", auth);
+  headers.set("Accept", "text/event-stream, application/json");
+  headers.set("User-Agent", "ESA-Edge-Function/1.0");
+
+  try {
+    const proxyRes = await fetch(targetURL, {
+      method: request.method,
+      headers,
+      body: request.body,
+      redirect: "follow",
+    });
+
+    const resHeaders = new Headers();
+    if (proxyRes.headers.get("Content-Type")) {
+      resHeaders.set("Content-Type", proxyRes.headers.get("Content-Type"));
+    }
+    resHeaders.set("Access-Control-Allow-Origin", "*");
+    resHeaders.set("Access-Control-Allow-Methods", "*");
+    resHeaders.set("Access-Control-Allow-Headers", "*");
+    resHeaders.set("X-Accel-Buffering", "no");
+
+    return new Response(proxyRes.body, {
+      status: proxyRes.status,
+      statusText: proxyRes.statusText,
+      headers: resHeaders,
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 502,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }
 }
 
 // 往 Upstash Redis 列表头部压入一条记录（LPUSH）
