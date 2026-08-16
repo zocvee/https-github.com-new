@@ -16,6 +16,10 @@ const REPORT_KEY = "chat_reports"; // 存放聊天记录的 Redis 列表 key
 const DEEPSEEK_TARGET = "https://api.deepseek.com";
 const CHATGLM_TARGET = "https://open.bigmodel.cn";
 
+// 服务端注入的模型密钥（前端不填时由边缘函数自动补上，避免密钥暴露）
+// 注意：此处密钥会写入边缘函数代码，请勿泄露
+const DEEPSEEK_API_KEY = "sk-0a4a991d0cf94804a28a544d569da69d";
+
 async function handleRequest(request) {
   const url = new URL(request.url);
   const { pathname, searchParams } = url;
@@ -68,7 +72,7 @@ async function handleRequest(request) {
   if (pathname.startsWith("/api/deepseek")) {
     const subpath = pathname.replace(/^\/api\/deepseek\/?/, "");
     const targetURL = withQuery(`${DEEPSEEK_TARGET}/${subpath}`);
-    return await forwardModelRequest(request, targetURL);
+    return await forwardModelRequest(request, targetURL, DEEPSEEK_API_KEY);
   }
 
   // 处理 /api/chatglm 模型代理请求 → 转发到 GLM API
@@ -137,7 +141,7 @@ async function handleRequest(request) {
 }
 
 // 转发模型请求：保留 Authorization 密钥头、Content-Type，透传请求体并流式返回响应
-async function forwardModelRequest(request, targetURL) {
+async function forwardModelRequest(request, targetURL, serverKey) {
   // OPTIONS 预检
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -154,8 +158,13 @@ async function forwardModelRequest(request, targetURL) {
   const headers = new Headers();
   const contentType = request.headers.get("Content-Type");
   if (contentType) headers.set("Content-Type", contentType);
-  const auth = request.headers.get("Authorization");
-  if (auth) headers.set("Authorization", auth);
+  const clientAuth = request.headers.get("Authorization");
+  // 前端没带密钥时，注入服务端密钥（避免密钥暴露在前端）
+  if (clientAuth) {
+    headers.set("Authorization", clientAuth);
+  } else if (serverKey) {
+    headers.set("Authorization", `Bearer ${serverKey}`);
+  }
   headers.set("Accept", "text/event-stream, application/json");
   headers.set("User-Agent", "ESA-Edge-Function/1.0");
 
