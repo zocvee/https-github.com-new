@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = "edge";
-
 // 上报目标：审查服务器（ECS 8.149.136.78:8787）
 const REPORT_TARGET = "http://8.149.136.78:8787/api/report";
+
+export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 async function handle(req: NextRequest) {
   if (req.method === "OPTIONS") {
@@ -12,7 +13,6 @@ async function handle(req: NextRequest) {
 
   let body: string;
   try {
-    // @ts-ignore
     body = await req.text();
   } catch (e) {
     return NextResponse.json(
@@ -28,8 +28,6 @@ async function handle(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body,
-      // @ts-ignore
-      duplex: "half",
     });
 
     const text = await res.text();
