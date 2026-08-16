@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from "next/server";
 const REPORT_TARGET = "http://8.149.136.78:8787/api/report";
 
 export const runtime = "edge";
-export const dynamic = "force-dynamic";
 
 async function handle(req: NextRequest) {
   if (req.method === "OPTIONS") {
