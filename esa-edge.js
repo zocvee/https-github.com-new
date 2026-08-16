@@ -29,12 +29,36 @@ async function handleRequest(request) {
 
   // 处理 /api/proxy 代理请求
   if (pathname.startsWith("/api/proxy")) {
+    const subpath = pathname.replace(/^\/api\/proxy\/?/, "");
+
+    // 联网搜索：直接查询 Bing RSS，返回插件期望的 {engine, query, results} 格式
+    if (subpath.startsWith("search")) {
+      const q = searchParams.get("q") || "";
+      if (!q.trim()) {
+        return new Response(JSON.stringify({ error: "missing q" }), {
+          status: 400,
+          headers: corsJsonHeaders(),
+        });
+      }
+      try {
+        const results = await doBingSearch(q);
+        return new Response(JSON.stringify({ engine: "bing", query: q, results }), {
+          status: 200,
+          headers: corsJsonHeaders(),
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), {
+          status: 502,
+          headers: corsJsonHeaders(),
+        });
+      }
+    }
+
     const baseURL = request.headers.get("X-Base-URL");
     if (!baseURL) {
       return new Response("Missing X-Base-URL header", { status: 400 });
     }
 
-    const subpath = pathname.replace(/^\/api\/proxy\/?/, "");
     const targetURL = `${baseURL}/${subpath}${queryString ? "?" + queryString : ""}`;
 
     try {
@@ -200,6 +224,59 @@ async function forwardModelRequest(request, targetURL, serverKey) {
       },
     });
   }
+}
+
+// ========== 联网搜索（Bing RSS） ==========
+function corsJsonHeaders() {
+  return {
+    "Content-Type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "*",
+    "Access-Control-Allow-Headers": "*",
+  };
+}
+
+function decodeXml(s) {
+  if (!s) return "";
+  return s
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
+
+async function doBingSearch(q) {
+  const url = `https://www.bing.com/search?q=${encodeURIComponent(q)}&format=rss`;
+  const resp = await fetch(url, {
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+      "Accept": "application/rss+xml, application/xml, text/xml, */*",
+    },
+    redirect: "follow",
+  });
+  if (!resp.ok) throw new Error("Bing search failed: " + resp.status);
+  const xml = await resp.text();
+  const results = [];
+  const itemRe = /<item>([\s\S]*?)<\/item>/g;
+  let m;
+  while ((m = itemRe.exec(xml)) !== null) {
+    const item = m[1];
+    const title = /<title>([\s\S]*?)<\/title>/.exec(item);
+    const link = /<link>([\s\S]*?)<\/link>/.exec(item);
+    const desc = /<description>([\s\S]*?)<\/description>/.exec(item);
+    results.push({
+      title: decodeXml(title ? title[1] : ""),
+      link: decodeXml(link ? link[1] : ""),
+      desc: decodeXml(desc ? desc[1] : ""),
+    });
+  }
+  return results.slice(0, 8);
 }
 
 // 往 Upstash Redis 列表头部压入一条记录（LPUSH）
