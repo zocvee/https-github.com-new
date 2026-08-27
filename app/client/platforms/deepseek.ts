@@ -1,6 +1,6 @@
 "use client";
 // azure and openai, using same models. so using same LLMApi.
-import { ApiPath, DEEPSEEK_BASE_URL, DeepSeek } from "@/app/constant";
+import { DEEPSEEK_BASE_URL, DeepSeek } from "@/app/constant";
 import {
   useAccessStore,
   useAppConfig,
@@ -16,7 +16,7 @@ import {
   LLMModel,
   SpeechOptions,
 } from "../api";
-import { getClientConfig } from "@/app/config/client";
+
 import {
   getMessageTextContent,
   getMessageTextContentWithoutThinking,
@@ -33,20 +33,17 @@ export class DeepSeekApi implements LLMApi {
 
     let baseUrl = "";
 
-    if (accessStore.useCustomConfig) {
+    // AQUA 网关完全兼容 OpenAI 协议且 Key 任意，直接前端直连，无需边缘函数转发
+    if (accessStore.useCustomConfig && accessStore.deepseekUrl) {
       baseUrl = accessStore.deepseekUrl;
-    }
-
-    if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      const apiPath = ApiPath.DeepSeek;
-      baseUrl = isApp ? DEEPSEEK_BASE_URL : apiPath;
+    } else {
+      baseUrl = DEEPSEEK_BASE_URL;
     }
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
     }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.DeepSeek)) {
+    if (!baseUrl.startsWith("http")) {
       baseUrl = "https://" + baseUrl;
     }
 
