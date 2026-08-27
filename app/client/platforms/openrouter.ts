@@ -27,27 +27,9 @@ import { fetch } from "@/app/utils/stream";
 export class OpenRouterApi implements LLMApi {
   private disableListModels = true;
 
-  path(path: string): string {
-    const accessStore = useAccessStore.getState();
-
-    let baseUrl = "";
-
-    if (accessStore.useCustomConfig) {
-      baseUrl = accessStore.openrouterUrl;
-    }
-
-    if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      const apiPath = ApiPath.OpenRouter;
-      baseUrl = isApp ? OPENROUTER_BASE_URL : apiPath;
-    }
-
-    if (baseUrl.endsWith("/")) {
-      baseUrl = baseUrl.slice(0, baseUrl.length - 1);
-    }
-    if (!baseUrl.startsWith("http") && !baseUrl.startsWith(ApiPath.OpenRouter)) {
-      baseUrl = "https://" + baseUrl;
-    }
+    path(path: string): string {
+    // OpenRouter 密钥由 ESA 边缘函数统一注入，前端恒走 /api/openrouter 代理，不直连官方
+    const baseUrl = ApiPath.OpenRouter;
 
     console.log("[Proxy Endpoint] ", baseUrl, path);
 
