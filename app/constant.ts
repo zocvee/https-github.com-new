@@ -629,23 +629,15 @@ const xAIModes = [
 ];
 
 const chatglmModels = [
-  "glm-4-plus",
-  "glm-4-airx",
-  "glm-4-long",
-  "glm-4-flashx",
-  "glm-4v-plus",
-  "cogview-3-plus",
-  "cogview-3-flash",
+
 ];
 
 const chatglmModelDescriptions: Record<string, string> = {
   "glm-4-plus": "最强推理 · 旗舰版",
-  "glm-4-airx": "速度与性能最佳平衡",
   "glm-4-long": "超长上下文 · 128K",
   "glm-4-flashx": "极致低延迟 · 闪电响应",
   "glm-4v-plus": "最强视觉 · 图片理解",
   "cogview-3-plus": "高质量文生图",
-  "cogview-3-flash": "快速文生图 · 低成本",
 };
 
 const deepseekModelDescriptions: Record<string, string> = {
