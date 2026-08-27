@@ -330,13 +330,23 @@ export function stream(
           return finish();
         }
 
-        if (
-          !res.ok ||
-          !res.headers
-            .get("content-type")
-            ?.startsWith(EventStreamContentType) ||
-          res.status !== 200
-        ) {
+        // AQUA 等第三方网关不返回 Content-Type 头，但 body 实际是标准 SSE 流
+        let isStream = contentType?.startsWith(EventStreamContentType) ?? false;
+        if (!isStream) {
+          try {
+            const reader = res.clone().body?.getReader();
+            if (reader) {
+              const { value } = await reader.read();
+              const head = new TextDecoder().decode(value || new Uint8Array());
+              isStream = /^\s*data:/.test(head);
+              reader.releaseLock();
+            }
+          } catch {
+            isStream = false;
+          }
+        }
+
+        if (!res.ok || !isStream || res.status !== 200) {
           const responseTexts = [responseText];
           let extraInfo = await res.clone().text();
           try {
@@ -569,13 +579,23 @@ export function streamWithThink(
           return finish();
         }
 
-        if (
-          !res.ok ||
-          !res.headers
-            .get("content-type")
-            ?.startsWith(EventStreamContentType) ||
-          res.status !== 200
-        ) {
+        // AQUA 等第三方网关不返回 Content-Type 头，但 body 实际是标准 SSE 流
+        let isStream = contentType?.startsWith(EventStreamContentType) ?? false;
+        if (!isStream) {
+          try {
+            const reader = res.clone().body?.getReader();
+            if (reader) {
+              const { value } = await reader.read();
+              const head = new TextDecoder().decode(value || new Uint8Array());
+              isStream = /^\s*data:/.test(head);
+              reader.releaseLock();
+            }
+          } catch {
+            isStream = false;
+          }
+        }
+
+        if (!res.ok || !isStream || res.status !== 200) {
           const responseTexts = [responseText];
           let extraInfo = await res.clone().text();
           try {
