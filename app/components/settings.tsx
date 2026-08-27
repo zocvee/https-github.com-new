@@ -1225,7 +1225,17 @@ export function Settings() {
         title={Locale.Settings.Access.DeepSeek.ApiKey.Title}
         subTitle={Locale.Settings.Access.DeepSeek.ApiKey.SubTitle}
       >
-      <span>已由管理员配置，无需填写</span>
+        <PasswordInput
+          aria-label={Locale.Settings.Access.DeepSeek.ApiKey.Title}
+          value={accessStore.deepseekApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.DeepSeek.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.deepseekApiKey = e.currentTarget.value),
+            );
+          }}
+        />
       </ListItem>
     </>
   );
