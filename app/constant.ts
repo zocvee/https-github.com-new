@@ -35,6 +35,7 @@ export const XAI_BASE_URL = "https://api.x.ai";
 export const CHATGLM_BASE_URL = "https://open.bigmodel.cn";
 
 export const SILICONFLOW_BASE_URL = "https://api.siliconflow.cn";
+export const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 export const CACHE_URL_PREFIX = "/api/cache";
 export const UPLOAD_URL = `${CACHE_URL_PREFIX}/upload`;
@@ -71,6 +72,7 @@ export enum ApiPath {
   ChatGLM = "/api/chatglm",
   DeepSeek = "/api/deepseek",
   SiliconFlow = "/api/siliconflow",
+  OpenRouter = "/api/openrouter",
 }
 
 export enum SlotID {
@@ -129,6 +131,7 @@ export enum ServiceProvider {
   ChatGLM = "ChatGLM",
   DeepSeek = "DeepSeek",
   SiliconFlow = "SiliconFlow",
+  OpenRouter = "OpenRouter",
 }
 
 // Google API safety settings, see https://ai.google.dev/gemini-api/docs/safety-settings
@@ -155,6 +158,7 @@ export enum ModelProvider {
   ChatGLM = "ChatGLM",
   DeepSeek = "DeepSeek",
   SiliconFlow = "SiliconFlow",
+  OpenRouter = "OpenRouter",
 }
 
 export const Stability = {
@@ -244,6 +248,11 @@ export const Iflytek = {
 
 export const DeepSeek = {
   ExampleEndpoint: DEEPSEEK_BASE_URL,
+  ChatPath: "chat/completions",
+};
+
+export const OpenRouter = {
+  ExampleEndpoint: OPENROUTER_BASE_URL,
   ChatPath: "chat/completions",
 };
 
@@ -601,6 +610,8 @@ const iflytekModels = [
 
 const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner", "deepseek-v4-flash"];
 
+const openrouterModels = ["cohere/north-mini-code:free"];
+
 const xAIModes = [
   "grok-beta",
   "grok-2",
@@ -637,6 +648,10 @@ const deepseekModelDescriptions: Record<string, string> = {
   "deepseek-coder": "代码专用 · 补全生成",
   "deepseek-reasoner": "深度推理 · R1 思维链",
   "deepseek-v4-flash": "新一代极速 · V4 架构",
+};
+
+const openrouterModelDescriptions: Record<string, string> = {
+  "cohere/north-mini-code:free": "Cohere North Mini Code · 免费代码模型",
 };
 
 const siliconflowModels = [
@@ -822,6 +837,18 @@ export const DEFAULT_MODELS = [
       providerName: "SiliconFlow",
       providerType: "siliconflow",
       sorted: 14,
+    },
+  })),
+  ...openrouterModels.map((name) => ({
+    name,
+    available: true,
+    sorted: seq++,
+    description: openrouterModelDescriptions[name],
+    provider: {
+      id: "openrouter",
+      providerName: "OpenRouter",
+      providerType: "openrouter",
+      sorted: 15,
     },
   })),
 ] as const;
