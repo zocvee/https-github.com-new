@@ -28,7 +28,7 @@ export const TENCENT_BASE_URL = "https://hunyuan.tencentcloudapi.com";
 export const MOONSHOT_BASE_URL = "https://api.moonshot.cn";
 export const IFLYTEK_BASE_URL = "https://spark-api-open.xf-yun.com";
 
-export const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
+export const DEEPSEEK_BASE_URL = "https://api.ltzy.top/v1";
 
 export const XAI_BASE_URL = "https://api.x.ai";
 
@@ -608,7 +608,7 @@ const iflytekModels = [
   "4.0Ultra",
 ];
 
-const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner", "deepseek-v4-flash"];
+const deepseekModels = ["nim/deepseek-ai/deepseek-v4-flash-0731"];
 
 const openrouterModels = ["cohere/north-mini-code:free"];
 
@@ -644,10 +644,7 @@ const chatglmModelDescriptions: Record<string, string> = {
 };
 
 const deepseekModelDescriptions: Record<string, string> = {
-  "deepseek-chat": "通用对话 · V3 旗舰",
-  "deepseek-coder": "代码专用 · 补全生成",
-  "deepseek-reasoner": "深度推理 · R1 思维链",
-  "deepseek-v4-flash": "新一代极速 · V4 架构",
+  "nim/deepseek-ai/deepseek-v4-flash-0731": "DeepSeek V4 Flash · AQUA 网关",
 };
 
 const openrouterModelDescriptions: Record<string, string> = {
