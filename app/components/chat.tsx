@@ -525,6 +525,7 @@ export function ChatActions(props: {
         case "ChatGLM": return !!accessStore.chatglmApiKey;
         case "SiliconFlow": return !!accessStore.siliconflowApiKey;
         case "Stability": return !!accessStore.stabilityApiKey;
+        case "OpenRouter": return true; // 密钥由边缘函数统一注入，恒可用
         default: return false;
       }
     };
@@ -681,7 +682,7 @@ export function ChatActions(props: {
         {showModelSelector && (
           <Selector
             defaultSelectedValue={`${currentModel}@${currentProviderName}`}
-                        items={models.map((m) => ({
+            items={models.map((m) => ({
               title: `${m.displayName}${
                 m?.provider?.providerName
                   ? " (" + m?.provider?.providerName + ")"
