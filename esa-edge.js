@@ -1,36 +1,33 @@
 /**
  * ESA 边缘函数 - NextChat API 代理 + 模型代理 + 聊天记录上报中转
- * /api/proxy      : 代理搜索插件等外部请求
- * /api/deepseek   : 代理 DeepSeek 模型请求（转发 Authorization 密钥）
- * /api/chatglm    : 代理 GLM 模型请求（转发 Authorization 密钥）
- * /api/report     : 把聊天记录推送到 Upstash Redis（审查服务器从 Upstash 拉取）
+ * /api/proxy        : 代理搜索插件等外部请求
+ * /api/deepseek     : 代理 DeepSeek 模型请求（转发 Authorization 密钥）
+ * /api/chatglm      : 代理 GLM 模型请求（转发 Authorization 密钥）
+ * /api/openrouter   : 代理 OpenRouter 模型请求（转发 Authorization 密钥）
+ * /api/report       : 把聊天记录推送到 Upstash Redis（审查服务器从 Upstash 拉取）
  */
-
 // ========== Upstash Redis 连接信息（请务必备份，勿泄露） ==========
 const UPSTASH_URL = "https://huge-redfish-128383.upstash.io";
 const UPSTASH_TOKEN = "gQAAAAAAAfV_AAIgcDE0NGFlYTI3ZTg2NTM0ZjQzOWE2ZGI5ZDlmY2RmN2Y0ZQ";
 const REPORT_KEY = "chat_reports"; // 存放聊天记录的 Redis 列表 key
 // =================================================================
-
 // 模型 API 目标地址（与 app/api/deepseek.ts、app/api/glm.ts 的默认 baseUrl 一致）
 const DEEPSEEK_TARGET = "https://api.deepseek.com";
 const CHATGLM_TARGET = "https://open.bigmodel.cn";
-
+const OPENROUTER_TARGET = "https://openrouter.ai/api/v1";
 // 服务端注入的模型密钥（前端不填时由边缘函数自动补上，避免密钥暴露）
 // 注意：此处密钥会写入边缘函数代码，请勿泄露
 const DEEPSEEK_API_KEY = "sk-0a4a991d0cf94804a28a544d569da69d";
 const CHATGLM_API_KEY = "8fdd09efe0ac4784bc0076bcb0b9577c.By2iouvNnY7AlvNw";
-
+const OPENROUTER_API_KEY = "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";
 async function handleRequest(request) {
   const url = new URL(request.url);
   const { pathname, searchParams } = url;
   const queryString = searchParams.toString();
   const withQuery = (u) => (queryString ? `${u}?${queryString}` : u);
-
   // 处理 /api/proxy 代理请求
   if (pathname.startsWith("/api/proxy")) {
     const subpath = pathname.replace(/^\/api\/proxy\/?/, "");
-
     // 联网搜索：直接查询 Bing RSS，返回插件期望的 {engine, query, results} 格式
     if (subpath.startsWith("search")) {
       const q = searchParams.get("q") || "";
@@ -53,14 +50,11 @@ async function handleRequest(request) {
         });
       }
     }
-
     const baseURL = request.headers.get("X-Base-URL");
     if (!baseURL) {
       return new Response("Missing X-Base-URL header", { status: 400 });
     }
-
     const targetURL = `${baseURL}/${subpath}${queryString ? "?" + queryString : ""}`;
-
     try {
       const proxyRes = await fetch(targetURL, {
         method: request.method,
@@ -70,13 +64,11 @@ async function handleRequest(request) {
         },
         redirect: "follow",
       });
-
       const resHeaders = new Headers();
       resHeaders.set("Content-Type", "application/json");
       resHeaders.set("Access-Control-Allow-Origin", "*");
       resHeaders.set("Access-Control-Allow-Methods", "*");
       resHeaders.set("Access-Control-Allow-Headers", "*");
-
       const body = await proxyRes.text();
       return new Response(body, {
         status: proxyRes.status,
@@ -92,21 +84,24 @@ async function handleRequest(request) {
       });
     }
   }
-
   // 处理 /api/deepseek 模型代理请求 → 转发到 DeepSeek API
   if (pathname.startsWith("/api/deepseek")) {
     const subpath = pathname.replace(/^\/api\/deepseek\/?/, "");
     const targetURL = withQuery(`${DEEPSEEK_TARGET}/${subpath}`);
     return await forwardModelRequest(request, targetURL, DEEPSEEK_API_KEY);
   }
-
   // 处理 /api/chatglm 模型代理请求 → 转发到 GLM API
   if (pathname.startsWith("/api/chatglm")) {
     const subpath = pathname.replace(/^\/api\/chatglm\/?/, "");
     const targetURL = withQuery(`${CHATGLM_TARGET}/${subpath}`);
     return await forwardModelRequest(request, targetURL, CHATGLM_API_KEY);
   }
-
+  // 处理 /api/openrouter 模型代理请求 → 转发到 OpenRouter API
+  if (pathname.startsWith("/api/openrouter")) {
+    const subpath = pathname.replace(/^\/api\/openrouter\/?/, "");
+    const targetURL = withQuery(`${OPENROUTER_TARGET}/${subpath}`);
+    return await forwardModelRequest(request, targetURL, OPENROUTER_API_KEY);
+  }
   // 处理 /api/report 聊天记录上报 → 推送到 Upstash Redis
   if (pathname.startsWith("/api/report")) {
     try {
@@ -148,7 +143,6 @@ async function handleRequest(request) {
       });
     }
   }
-
   // 处理 CORS 预检请求
   if (request.method === "OPTIONS") {
     return new Response(null, {
@@ -161,10 +155,8 @@ async function handleRequest(request) {
       },
     });
   }
-
   return new Response("Not Found", { status: 404 });
 }
-
 // 转发模型请求：保留 Authorization 密钥头、Content-Type，透传请求体并流式返回响应
 async function forwardModelRequest(request, targetURL, serverKey) {
   // OPTIONS 预检
@@ -179,7 +171,6 @@ async function forwardModelRequest(request, targetURL, serverKey) {
       },
     });
   }
-
   const headers = new Headers();
   const contentType = request.headers.get("Content-Type");
   if (contentType) headers.set("Content-Type", contentType);
@@ -192,7 +183,6 @@ async function forwardModelRequest(request, targetURL, serverKey) {
   }
   headers.set("Accept", "text/event-stream, application/json");
   headers.set("User-Agent", "ESA-Edge-Function/1.0");
-
   try {
     const proxyRes = await fetch(targetURL, {
       method: request.method,
@@ -200,7 +190,6 @@ async function forwardModelRequest(request, targetURL, serverKey) {
       body: request.body,
       redirect: "follow",
     });
-
     const resHeaders = new Headers();
     if (proxyRes.headers.get("Content-Type")) {
       resHeaders.set("Content-Type", proxyRes.headers.get("Content-Type"));
@@ -209,7 +198,6 @@ async function forwardModelRequest(request, targetURL, serverKey) {
     resHeaders.set("Access-Control-Allow-Methods", "*");
     resHeaders.set("Access-Control-Allow-Headers", "*");
     resHeaders.set("X-Accel-Buffering", "no");
-
     return new Response(proxyRes.body, {
       status: proxyRes.status,
       statusText: proxyRes.statusText,
@@ -225,7 +213,6 @@ async function forwardModelRequest(request, targetURL, serverKey) {
     });
   }
 }
-
 // ========== 联网搜索（Bing RSS） ==========
 function corsJsonHeaders() {
   return {
@@ -235,7 +222,6 @@ function corsJsonHeaders() {
     "Access-Control-Allow-Headers": "*",
   };
 }
-
 function decodeXml(s) {
   if (!s) return "";
   return s
@@ -249,7 +235,6 @@ function decodeXml(s) {
     .replace(/&nbsp;/g, " ")
     .trim();
 }
-
 async function doBingSearch(q) {
   const url = `https://www.bing.com/search?q=${encodeURIComponent(q)}&format=rss`;
   const resp = await fetch(url, {
@@ -278,7 +263,6 @@ async function doBingSearch(q) {
   }
   return results.slice(0, 8);
 }
-
 // 往 Upstash Redis 列表头部压入一条记录（LPUSH）
 // 注意：Upstash REST 会把请求 body 原样作为值存储，因此直接传记录 JSON 字符串
 async function lpush(value) {
@@ -297,7 +281,6 @@ async function lpush(value) {
   const data = await resp.json();
   return data.result;
 }
-
 export default {
   fetch(request) {
     return handleRequest(request);
