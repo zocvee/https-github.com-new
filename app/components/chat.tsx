@@ -1035,9 +1035,8 @@ function _Chat() {
   const [attachImages, setAttachImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  // ====== 管理员配置区（修改这里来更换密码和API Key） ======
+  // ====== 管理员配置区（修改这里来更换密码） ======
   const ADMIN_PASSWORD = "123456"; // <-- 改这个数字来更换密码
-  const ADMIN_DEEPSEEK_KEY = "sk-9b3df8ccb16c47558c802ab4431baf4a";
   const ADMIN_CHATGLM_KEY = "8fdd09efe0ac4784bc0076bcb0b9577c.By2iouvNnY7AlvNw";
 
   // 密码验证状态
@@ -1049,18 +1048,6 @@ function _Chat() {
   const [passwordError, setPasswordError] = useState("");
   const pendingSubmitRef = useRef<(() => void) | null>(null);
   const [canSend, setCanSend] = useState(getPwVerified());
-
-  // 自动配置 DeepSeek API Key
-  useEffect(() => {
-    if (!accessStore.deepseekApiKey) {
-      accessStore.update((access) => {
-        access.provider = "DeepSeek" as any;
-        access.deepseekApiKey = ADMIN_DEEPSEEK_KEY;
-        access.deepseekUrl = "https://api.deepseek.com";
-        access.useCustomConfig = true;
-      });
-    }
-  }, []);
 
   // 自动配置 ChatGLM API Key
   useEffect(() => {
