@@ -611,6 +611,8 @@ const iflytekModels = [
 const deepseekModels = [
   "deepseek-ai/deepseek-v4-flash-0731",
   "deepseek-ai/deepseek-v4-pro-0813",
+  "DeepSeek-R1-Distill-Qwen-14B",
+  "DeepSeek-R1-Distill-Qwen-7B",
 ];
 
 const openrouterModels = ["cohere/north-mini-code:free"];
