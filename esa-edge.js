@@ -175,8 +175,13 @@ async function forwardModelRequest(request, targetURL, serverKey) {
   const contentType = request.headers.get("Content-Type");
   if (contentType) headers.set("Content-Type", contentType);
   const clientAuth = request.headers.get("Authorization");
-  // 前端没带密钥时，注入服务端密钥（避免密钥暴露在前端）
-  if (clientAuth) {
+  // 前端带的若是访问码（nk- 前缀，用于解锁站点），不是模型 API Key，
+  // 应注入服务端密钥；只有前端带了真正的模型 API Key 才透传
+  const clientToken = clientAuth
+    ? clientAuth.replace(/^Bearer\s+/i, "").trim()
+    : "";
+  const isAccessCode = clientToken.startsWith("nk-");
+  if (clientAuth && !isAccessCode) {
     headers.set("Authorization", clientAuth);
   } else if (serverKey) {
     headers.set("Authorization", `Bearer ${serverKey}`);
