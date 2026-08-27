@@ -50,7 +50,7 @@ const DEFAULT_STABILITY_URL = isApp ? STABILITY_BASE_URL : ApiPath.Stability;
 
 const DEFAULT_IFLYTEK_URL = isApp ? IFLYTEK_BASE_URL : ApiPath.Iflytek;
 
-const DEFAULT_DEEPSEEK_URL = isApp ? DEEPSEEK_BASE_URL : ApiPath.DeepSeek;
+const DEFAULT_DEEPSEEK_URL = DEEPSEEK_BASE_URL;
 
 const DEFAULT_XAI_URL = isApp ? XAI_BASE_URL : ApiPath.XAI;
 
