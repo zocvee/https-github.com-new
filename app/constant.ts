@@ -609,8 +609,8 @@ const iflytekModels = [
 ];
 
 const deepseekModels = [
-  "nim/deepseek-ai/deepseek-v4-flash-0731",
-  "nim/deepseek-ai/deepseek-v4-pro-0813",
+  "deepseek-ai/deepseek-v4-flash-0731",
+  "deepseek-ai/deepseek-v4-pro-0813",
 ];
 
 const openrouterModels = ["cohere/north-mini-code:free"];
@@ -647,8 +647,8 @@ const chatglmModelDescriptions: Record<string, string> = {
 };
 
 const deepseekModelDescriptions: Record<string, string> = {
-  "nim/deepseek-ai/deepseek-v4-flash-0731": "DeepSeek V4 Flash · AQUA 网关",
-  "nim/deepseek-ai/deepseek-v4-pro-0813": "DeepSeek V4 Pro · AQUA 网关",
+  "deepseek-ai/deepseek-v4-flash-0731": "DeepSeek V4 Flash · AQUA 网关",
+  "deepseek-ai/deepseek-v4-pro-0813": "DeepSeek V4 Pro · AQUA 网关",
 };
 
 const openrouterModelDescriptions: Record<string, string> = {
